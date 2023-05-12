@@ -84,27 +84,70 @@ class AsyncAsset {
 
 
     /**
-     *  让一个 AssetManager.bundle 对象加载在其主文件夹下的某个文件下的所有资源
+     *  让一个 AssetManager.bundle 对象加载在其主文件夹下的某个文件下的所有资源 如果资源已被销毁, 将自动移除出缓存字典并重新加载
      *  如果要加载 bundle 本身的文件夹, 第二个参数写 "./" 或使用默认值就好 
      */
-    public static async bundleLoadDir(bundle: AssetManager.Bundle, dirName: string = "./", onProgress?: (finished, total, res?) => void, onComplete?: (error?, resArray?) => void): Promise<Asset[]> {
+    public static async bundleLoadDir(bundle: AssetManager.Bundle | string, dirName: string = "./", onProgress?: (finished, total, res?) => void, onComplete?: (error?, resArray?) => void): Promise<Asset[]> {
+        let destroyedCount = 0;
+        let destroyedList: Asset[] = [];
+        let _bundle: any = bundle;
+        if (_bundle instanceof AssetManager.Bundle == false) {
+            _bundle = await asyncAsset.loadOneBundle(_bundle);
+        }
         return new Promise<Asset[]>(resolve => {
-            bundle.loadDir(dirName,
+            _bundle.loadDir(dirName,
                 (finished, total, res) => {
                     if (onProgress) {
-                        //console.info(finish,total)//预先获取加载总数量
-                        onProgress(finished, total, res);//注意total也需要预读文件夹中的资源总数量, 是会动态发生改变的  可能引发进度条跳动的情况
+                        onProgress(finished, total, res.url);//注意:加载总数不一定就是资源文件的总个数  一个图集文件下的子图数量也是会计入总数当中的
                     }
                 },
-                (error, resArray) => {
-                    if (onComplete) {
-                        onComplete(error, resArray);
+                (error, resArray: any[]) => {
+                    console.log(resArray.length, resArray[0]);
+                    for (let i = 0; i < resArray.length; i++) {
+                        let res = assetManager.assets.get(resArray[i].uuid);
+                        if (res && !res.isValid) {
+                            destroyedList.push(resArray[i]);
+                            resArray.splice(i, 1);
+                            i--;
+                        }
                     }
-                    if (!error) {
-                        resolve(resArray);
+                    if (destroyedList.length == 0) {//所有资源均没有被销毁过
+                        if (onComplete) {
+                            onComplete(error, resArray);
+                        }
+                        if (!error) {
+                            resolve(resArray);
+                        }
+                        else {
+                            resolve(null);//即使加载失败了也调用resolve() 当做成功来进行异步回调, 不过此时返回的是null, 表示该bundle不存在
+                        }
                     }
-                    else {
-                        resolve(null);//即使加载失败了也调用resolve() 当做成功来进行异步回调, 不过此时返回的是null, 表示该bundle不存在
+                    else {//否则启动重新加载队列
+                        console.warn("重新加载被销毁的资源!", destroyedList, resArray[0].isValid);
+                        let count = destroyedList.length;
+                        while (destroyedList[0]) {
+                            let item = destroyedList.pop();
+                            let res = assetManager.assets.get(item.uuid);
+                            assetManager.releaseAsset(res);
+                            assetManager.assets.remove(res.uuid);
+                            assetManager.loadAny(res.uuid, (err, newRes) => {
+                                count--;
+                                if (!err) {
+                                    resArray.push(newRes);
+                                }
+                                else {
+                                    assetManager.assets.add(res.uuid, res);
+                                    resArray.push(res);//重新加载发生错误, 把被销毁的资源塞回去充数
+                                }
+                                if (count == 0) {
+                                    if (onComplete) {
+                                        onComplete(error, resArray);
+                                    }
+                                    resolve(resArray);
+                                }
+                            })
+                        }
+
                     }
                 })
         });
@@ -211,8 +254,7 @@ class AsyncAsset {
                 if (err) {
                     console.info("加载远程资源 " + url + " 失败!");
                 }
-                else
-                {
+                else {
                     assetManager.assets.add(url, asset);
                     asset["$_$__remoteURL__"] = url;
                     if (onComplete) {
@@ -241,7 +283,7 @@ class AsyncAsset {
                     if (err != undefined) {
                         console.info("加载资源 " + url + " 失败!");
                     }
-                    else { 
+                    else {
                         asset["$_$__remoteURL__"] = url;
                     }
                     assets[assets.length] = asset;

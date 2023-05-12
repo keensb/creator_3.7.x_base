@@ -3,7 +3,7 @@
 //cocos creator 3.0+ 引擎代码位置  可以尝试覆盖这几个位置
 //CocosDashboard安装目录\resources\.editors\Creator\3.6.0\resources\resources\3d\engine\bin\.cache\dev\preview\bundled\index.js  主要
 //CocosDashboard安装目录\resources\.editors\Creator\3.6.0\resources\resources\3d\engine\cocos\core\scene-graph\node.ts  次要
-import { Asset, assetManager, AssetManager, CCObject, Component, debug, director, errorID, ImageAsset, Material, Node, NodeActivator, NodeEventType, path, RenderTexture, Scene, Sprite, SpriteAtlas, SpriteFrame, Texture2D, UIOpacity, UIRenderer, UITransform, warn, __private } from 'cc';
+import { Asset, assetManager, AssetManager, CCObject, Component, debug, director, errorID, ImageAsset, Material, Node, NodeActivator, NodeEventType, path, Prefab, RenderTexture, Scene, Sprite, SpriteAtlas, SpriteFrame, Texture2D, UIOpacity, UIRenderer, UITransform, warn, __private } from 'cc';
 import { DEBUG } from 'cc/env';
 import { decodeUuid } from '../ccutils/compressedUuid';
 import { getSetter } from '../ccutils/Super_Getter_Setter';
@@ -72,6 +72,7 @@ class EngineOverrider {
             enumerable: true,
             configurable: true
         })
+
 
 
 
@@ -185,6 +186,48 @@ class EngineOverrider {
                 else if (sf["$_$__activeDic__"][sp.uuid]) {
                     sf["$_$__activeRef__"]--;
                     delete sf["$_$__activeDic__"][sp.uuid];
+                }
+            }
+        }
+
+        let prefab_onLoaded = Prefab.prototype.onLoaded;
+        Prefab.prototype.onLoaded = function () {//预制体初始化的时候 把预制体上依赖的SpriteFrame也统计进去
+            prefab_onLoaded.call(this);
+            //如果预制体的节点上有个Sprite组件, 并且挂载了SpriteFrame
+            if (this.data && this.data.getComponent(Sprite) && this.data.getComponent(Sprite).spriteFrame) {
+                let sp = this.data.getComponent(Sprite);
+                sp["$_$__prefabSprite__"] = this.uuid;
+                let sf = sp.spriteFrame;
+                if (sf) {
+                    if (DEBUG) {
+                        sf["$_$__debugDes__"] = {
+                            描述: {
+                                1: '关于SpriteFrame自定义自动引用计数 $_$__xxxxRef 字段的解释(该说明仅在DEBUG版本可见):',
+                                2: '为了避免SpriteFrame繁琐的自增自减操作(addRef和decRef), 采用自动统计策略 为此, 重写了一些底层方法, 但并不与 addRef和decRef 冲突',
+                                3: '$_$__spriteRef__ 表示该SpriteFrame当前总共被几个Sprite组件(包括预制体上的Sprite)所引用 并使用 字典对象$_$__spriteDic__ 保存Sprite组件引用 (当销毁该SpriteFrame时, 所有Sprite组件的引用都会自动清空)',
+                                4: '$_$__prefabRef__ 表示该SpriteFrame当前总共被几个预制体上的Sprite组件所引用 并使用 字典对象$_$__prefabDic__ 保存预制体的uuid',
+                                5: '$_$__activeRef__ 表示引用该SpriteFrame的Sprite组件所在节点 目前总共有几个正处于激活状态 并使用 字典对象$_$__activeDic__ 保存Sprite组件的uuid',
+                                6: '$_$__onStageRef__ 表示引用该SpriteFrame的Sprite组件所在节点 目前总共有几个出现在场景里 并使用 字典对象$_$__onStageDic__ 保存Sprite组件的uuid',
+                                7: '※理论上$_$__onStageRef__ 或 $_$__activeRef__ 的值任何时候都不应该大于 $_$__spriteRef__',
+                                8: '※根据creator的循环渲染机制 当引用了该SpriteFrame的所有Sprite组件的节点 当前都没有出现在场景上或都没有被激活时(也就是同时存在于$_$__onStageDic__ 和 $_$__activeDic__字典的uuid总和为0时) 才可以通过destroy()安全销毁该SpriteFrame',
+                                9: '另外为SpriteFrame类提供了一个destorySafe字段 用于判断该SpriteFrame当前是否可以被销毁和释放(要保证引用该SpriteFrame的Sprite组件所在的节点 不会再次被加载进场景或再次被激活,否则仍然会报错 最好是让 Sprite组件.spriteFrame = 其他值 或销毁Sprite组件)',
+                                10: '※建议: 当$_$__spriteRef__的值为0时 才是最安全的销毁时机'
+                            }
+                        }
+                    }
+                    if (!sf["$_$__spriteRef__"]) sf["$_$__spriteRef__"] = 0;
+                    if (!sf["$_$__spriteDic__"]) sf["$_$__spriteDic__"] = {};
+                    if (!sf["$_$__spriteDic__"][sp.uuid]) {
+                        sf["$_$__spriteRef__"]++;
+                        sf["$_$__spriteDic__"][sp.uuid] = sp;
+                    }
+
+                    if (!sf["$_$__prefabRef__"]) sf["$_$__prefabRef__"] = 0;
+                    if (!sf["$_$__prefabDic__"]) sf["$_$__prefabDic__"] = {};
+                    if (!sf["$_$__prefabDic__"][this.uuid]) {
+                        sf["$_$__prefabRef__"]++;
+                        sf["$_$__prefabDic__"][this.uuid] = 1;
+                    }
                 }
             }
         }
@@ -506,6 +549,17 @@ class EngineOverrider {
                         oldFrame["$_$__activeRef__"]--;
                         delete oldFrame["$_$__activeDic__"][this.uuid];
                     }
+
+                    if (this["$_$__prefabSprite__"]) {
+                        if (oldFrame["$_$__prefabDic__"][this["$_$__prefabSprite__"]]) {
+                            if (oldFrame["$_$__prefabRef__"] && oldFrame["$_$__prefabRef__"] > 0) {
+                                oldFrame["$_$__prefabRef__"]--;
+                            }
+                            delete oldFrame["$_$__prefabDic__"][this["$_$__prefabSprite__"]];
+                        }
+                    }
+
+                    delete this["$_$__prefabSprite__"];
                     this["spriteFrame"] = null;
                 }
             }
@@ -519,6 +573,14 @@ class EngineOverrider {
                 return false;
             }
 
+            if (this["$_$__spriteDic__"] && Object.keys(this["$_$__spriteDic__"]).length > 0) {
+                for (let key in this["$_$__spriteDic__"]) {
+                    this["$_$__spriteDic__"][key].spriteFrame = null;
+                    this["$_$__spriteDic__"][key] = null;
+                }
+                this["$_$__spriteDic__"] = null;
+                this["_ref"] = 0;
+            }
             if (this["uuid"] !== undefined && EngineOverrider.remoteSpriteFrameCache[this["uuid"]]) {//从本地缓存库移除
                 delete EngineOverrider.remoteSpriteFrameCache[this["uuid"]];
             }
@@ -538,9 +600,9 @@ class EngineOverrider {
                 this["$_$__spriteDic__"] = null;
                 this["_ref"] = 0;
                 //assetManager.releaseAsset(this);//解除依赖关系 并从缓存字典(assetManager.assets._map)中移除 以便下次能重新加载
-                if (assetManager.assets) {
-                    //assetManager.assets.remove(this.uuid);
-                }
+                //if (assetManager.assets) {
+                //assetManager.assets.remove(this.uuid);
+                //}
             }
             if (this["uuid"] !== undefined && EngineOverrider.remoteSpriteFrameCache[this["uuid"]]) {//从本地缓存库移除
                 delete EngineOverrider.remoteSpriteFrameCache[this["uuid"]];
@@ -591,13 +653,14 @@ class EngineOverrider {
                         描述: {
                             1: '关于SpriteFrame自定义自动引用计数 $_$__xxxxRef 字段的解释(该说明仅在DEBUG版本可见):',
                             2: '为了避免SpriteFrame繁琐的自增自减操作(addRef和decRef), 采用自动统计策略 为此, 重写了一些底层方法, 但并不与 addRef和decRef 冲突',
-                            3: '$_$__spriteRef__ 表示该SpriteFrame当前总共被几个Sprite组件所引用 并使用 字典对象$_$__spriteDic__ 保存Sprite组件的uuid',
-                            4: '$_$__activeRef__ 表示引用该SpriteFrame的Sprite组件所在节点 目前总共有几个正处于激活状态 并使用 字典对象$_$__activeDic__ 保存Sprite组件的uuid',
-                            5: '$_$__onStageRef__ 表示引用该SpriteFrame的Sprite组件所在节点 目前总共有几个出现在场景里 并使用 字典对象$_$__onStageDic__ 保存Sprite组件的uuid',
-                            6: '※理论上$_$__onStageRef__ 或 $_$__activeRef__ 的值任何时候都不应该大于 $_$__spriteRef__',
-                            7: '※根据creator的循环渲染机制 当引用了该SpriteFrame的所有Sprite组件的节点 当前都没有出现在场景上或都没有被激活时(也就是同时存在于$_$__onStageDic__ 和 $_$__activeDic__字典的uuid总和为0时) 才可以通过destroy()安全销毁该SpriteFrame',
-                            8: '另外为SpriteFrame类提供了一个destorySafe字段 用于判断该SpriteFrame当前是否可以被销毁和释放(要保证引用该SpriteFrame的Sprite组件所在的节点 不会再次被加载进场景或再次被激活,否则仍然会报错 最好是让 Sprite组件.spriteFrame = 其他值 或销毁Sprite组件)',
-                            9: '※建议: 当$_$__spriteRef__的值为0时 才是最安全的销毁时机'
+                            3: '$_$__spriteRef__ 表示该SpriteFrame当前总共被几个Sprite组件(包括预制体上的Sprite)所引用 并使用 字典对象$_$__spriteDic__ 保存Sprite组件引用 (当销毁该SpriteFrame时, 所有Sprite组件的引用都会自动清空)',
+                            4: '$_$__prefabRef__ 表示该SpriteFrame当前总共被几个预制体上的Sprite组件所引用 并使用 字典对象$_$__prefabDic__ 保存预制体的uuid',
+                            5: '$_$__activeRef__ 表示引用该SpriteFrame的Sprite组件所在节点 目前总共有几个正处于激活状态 并使用 字典对象$_$__activeDic__ 保存Sprite组件的uuid',
+                            6: '$_$__onStageRef__ 表示引用该SpriteFrame的Sprite组件所在节点 目前总共有几个出现在场景里 并使用 字典对象$_$__onStageDic__ 保存Sprite组件的uuid',
+                            7: '※理论上$_$__onStageRef__ 或 $_$__activeRef__ 的值任何时候都不应该大于 $_$__spriteRef__',
+                            8: '※根据creator的循环渲染机制 当引用了该SpriteFrame的所有Sprite组件的节点 当前都没有出现在场景上或都没有被激活时(也就是同时存在于$_$__onStageDic__ 和 $_$__activeDic__字典的uuid总和为0时) 才可以通过destroy()安全销毁该SpriteFrame',
+                            9: '另外为SpriteFrame类提供了一个destorySafe字段 用于判断该SpriteFrame当前是否可以被销毁和释放(要保证引用该SpriteFrame的Sprite组件所在的节点 不会再次被加载进场景或再次被激活,否则仍然会报错 最好是让 Sprite组件.spriteFrame = 其他值 或销毁Sprite组件)',
+                            10: '※建议: 当$_$__spriteRef__的值为0时 才是最安全的销毁时机'
                         }
                     }
                 }
@@ -693,6 +756,16 @@ class EngineOverrider {
                     delete oldFrame["$_$__activeDic__"][this.uuid];
                 }
 
+                if (this["$_$__prefabSprite__"]) {
+                    if (oldFrame["$_$__prefabDic__"][this["$_$__prefabSprite__"]]) {
+                        if (oldFrame["$_$__prefabRef__"] && oldFrame["$_$__prefabRef__"] > 0) {
+                            oldFrame["$_$__prefabRef__"]--;
+                        }
+                        delete oldFrame["$_$__prefabDic__"][this["$_$__prefabSprite__"]];
+                    }
+                }
+
+
             }
             if (spriteFrame) {
                 if (!spriteFrame["$_$__spriteRef__"]) spriteFrame["$_$__spriteRef__"] = 0;
@@ -714,6 +787,15 @@ class EngineOverrider {
                 if (this.node.active && !spriteFrame["$_$__activeDic__"][this.uuid]) {
                     spriteFrame["$_$__activeRef__"]++;
                     spriteFrame["$_$__activeDic__"][this.uuid] = 1;
+                }
+
+                if (this["$_$__prefabSprite__"]) {
+                    if (!spriteFrame["$_$__prefabRef__"]) spriteFrame["$_$__prefabRef__"] = 0;
+                    if (!spriteFrame["$_$__prefabDic__"]) spriteFrame["$_$__prefabDic__"] = {};
+                    if (!spriteFrame["$_$__prefabDic__"][this["$_$__prefabSprite__"]]) {
+                        spriteFrame["$_$__prefabRef__"]++;
+                        spriteFrame["$_$__prefabDic__"][this["$_$__prefabSprite__"]] = 1;
+                    }
                 }
             }
             ///=↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑新增↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
