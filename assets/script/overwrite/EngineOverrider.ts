@@ -275,6 +275,9 @@ class EngineOverrider {
                 if (value && value.uuid && value.uuid.indexOf("://") > -1) {
                     this["$_$__remoteURL__"] = value.uuid;
                 }
+                else {
+                    delete this["$_$__remoteURL__"];
+                }
             },
             enumerable: true,
             configurable: true
@@ -287,6 +290,9 @@ class EngineOverrider {
                 spriteFrame_texture.call(this, value);
                 if (value && value["$_$__remoteURL__"]) {
                     this["$_$__remoteURL__"] = value["$_$__remoteURL__"];
+                }
+                else {
+                    delete this["$_$__remoteURL__"];
                 }
             },
             enumerable: true,

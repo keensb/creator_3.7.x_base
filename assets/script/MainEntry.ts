@@ -79,6 +79,7 @@ export class MainEntry extends Component {
         let res = await asyncAsset.loadAny("ef9a2b8b-daff-4479-b976-a33234861fa3@f9941", SpriteFrame);
         this.faceSp.spriteFrame = res;
         this.faceSp2.spriteFrame = res
+        this.currentSF = res;
         window["currentSF"] = this.currentSF;  
         this.isLoading = false;
         //////////////////////////
