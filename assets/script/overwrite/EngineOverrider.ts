@@ -77,19 +77,21 @@ class EngineOverrider {
 
 
         Object.defineProperty(Sprite.prototype, "asyncSpriteFrame", {
+            //这是一个异步的 settter
             set: async function (sfObject: SpriteFrame | { bundle: string, url: string } | [{ bundle: string, type: new (...args) => SpriteAtlas, url: string }, string] | string) {
                 let _this = this;
-
+                _this._tempSpriteFrame = sfObject;
                 if (!_this.isValid) return;
                 let spriteFrame: SpriteFrame;
 
                 if (sfObject == null) {
                     this.spriteFrame = null;
+                    delete _this._tempSpriteFrame;
                     return;
                 }
 
-                if (typeof sfObject == "object") {// SpriteFrame实例   如果 <Sprite>.spriteFrame != null 可以通过 <Sprite>.asyncSpriteFrame = <Sprite>.asyncSpriteFrame 的方式, 再次加载回被destroy的SpriteFrame
-                    if (sfObject.constructor && sfObject.constructor.name == "SpriteFrame") {
+                if (typeof sfObject == "object") {// SpriteFrame实例       如果 sprite.spriteFrame != null 可以通过 sprite.asyncSpriteFrame = sprite.spriteFrame 的方式, 再次加载回被destroy的SpriteFrame
+                    if (sfObject instanceof SpriteFrame) {
                         spriteFrame = sfObject as SpriteFrame;
 
                         //确定是SpriteFrame实例
@@ -106,19 +108,23 @@ class EngineOverrider {
                                     EngineOverrider.remoteSpriteFrameCache[sfObject["$_$__remoteURL__"]] = spriteFrame;
                                 }
                                 if (_this.isValid) _this.spriteFrame = spriteFrame;
+                                delete _this._tempSpriteFrame;
                             }
                             else {
                                 spriteFrame = await asyncAsset.loadAny(sfObject["uuid"], SpriteFrame);
                                 if (_this.isValid) _this.spriteFrame = spriteFrame;
+                                delete _this._tempSpriteFrame;
                             }
                         }
                         else {
                             if (_this.isValid) _this.spriteFrame = spriteFrame;
+                            delete _this._tempSpriteFrame;
                         }
                     }
-                    else if (sfObject["bundle"] && sfObject["url"]) {// usingAssets 配置资源 建议参数使用 usingAsset的配置
+                    else if (sfObject["bundle"] && sfObject["url"]) {// usingAssets配置资源      建议参数使用 usingAsset的配置
                         spriteFrame = await asyncAsset.bundleLoadOneAsset(sfObject["bundle"], sfObject["url"], SpriteFrame);
                         if (_this.isValid) _this.spriteFrame = spriteFrame;
+                        delete _this._tempSpriteFrame;
                     }
                     else if (sfObject["length"] > 1 && sfObject[0]["bundle"] && sfObject[0]["type"] == SpriteAtlas) {//某图集下的子图 建议参数使用 usingAsset的配置
                         let spriteAtlas = await asyncAsset.bundleLoadOneAsset(sfObject[0]["bundle"], sfObject[0]["url"], SpriteAtlas);
@@ -127,9 +133,11 @@ class EngineOverrider {
                             //asyncAsset.loadAny 会自动识别和处理 被销毁的spriteFrame 
                             spriteFrame = await asyncAsset.loadAny(spriteFrame.uuid, SpriteFrame);
                             if (_this.isValid) _this.spriteFrame = spriteFrame;
+                            delete _this._tempSpriteFrame;
                         }
                         else {
                             if (_this.isValid) _this.spriteFrame = spriteFrame;
+                            delete _this._tempSpriteFrame;
                         }
                     }
                 }
@@ -137,11 +145,13 @@ class EngineOverrider {
                     if (sfObject.indexOf("://") == -1) {//这不是 url地址 那就当做uuid处理 压缩或未压缩的 uuid, asyncAsset.loadAny都会自动识和处理
                         spriteFrame = await asyncAsset.loadAny(sfObject, SpriteFrame);
                         if (_this.isValid) _this.spriteFrame = spriteFrame;
+                        delete _this._tempSpriteFrame;
                     }
                     else {
                         if (EngineOverrider.remoteSpriteFrameCache[sfObject] && EngineOverrider.remoteSpriteFrameCache[sfObject].isValid) {
                             spriteFrame = EngineOverrider.remoteSpriteFrameCache[sfObject];
                             if (_this.isValid) _this.spriteFrame = spriteFrame;
+                            delete _this._tempSpriteFrame;
                         }
                         else {
                             let spriteFrame;
@@ -155,16 +165,16 @@ class EngineOverrider {
                                 EngineOverrider.remoteSpriteFrameCache[sfObject] = spriteFrame;
                             }
                             if (_this.isValid) _this.spriteFrame = spriteFrame;
+                            delete _this._tempSpriteFrame;
                         }
                     }
                 }
 
-
-
-
             },
             get: function () {
-                return this._spriteFrame;
+                let _this = this;
+                if ("_tempSpriteFrame" in _this) return _this._tempSpriteFrame;//如果在异步setter进行中 读取 asyncSpriteFrame   返回的是传入 setter的原始数值
+                return _this.spriteFrame;
             },
             enumerable: true,
             configurable: true
@@ -205,13 +215,14 @@ class EngineOverrider {
                                 1: '关于SpriteFrame自定义自动引用计数 $_$__xxxxRef 字段的解释(该说明仅在DEBUG版本可见):',
                                 2: '为了避免SpriteFrame繁琐的自增自减操作(addRef和decRef), 采用自动统计策略 为此, 重写了一些底层方法, 但并不与 addRef和decRef 冲突',
                                 3: '$_$__spriteRef__ 表示该SpriteFrame当前总共被几个Sprite组件(包括预制体上的Sprite)所引用 并使用 字典对象$_$__spriteDic__ 保存Sprite组件引用 (当销毁该SpriteFrame时, 所有Sprite组件的引用都会自动清空)',
-                                4: '$_$__prefabRef__ 表示该SpriteFrame当前总共被几个预制体上的Sprite组件所引用 并使用 字典对象$_$__prefabDic__ 保存预制体的uuid',
-                                5: '$_$__activeRef__ 表示引用该SpriteFrame的Sprite组件所在节点 目前总共有几个正处于激活状态 并使用 字典对象$_$__activeDic__ 保存Sprite组件的uuid',
-                                6: '$_$__onStageRef__ 表示引用该SpriteFrame的Sprite组件所在节点 目前总共有几个出现在场景里 并使用 字典对象$_$__onStageDic__ 保存Sprite组件的uuid',
-                                7: '※理论上$_$__onStageRef__ 或 $_$__activeRef__ 的值任何时候都不应该大于 $_$__spriteRef__',
-                                8: '※根据creator的循环渲染机制 当引用了该SpriteFrame的所有Sprite组件的节点 当前都没有出现在场景上或都没有被激活时(也就是同时存在于$_$__onStageDic__ 和 $_$__activeDic__字典的uuid总和为0时) 才可以通过destroy()安全销毁该SpriteFrame',
-                                9: '另外为SpriteFrame类提供了一个destorySafe字段 用于判断该SpriteFrame当前是否可以被销毁和释放(要保证引用该SpriteFrame的Sprite组件所在的节点 不会再次被加载进场景或再次被激活,否则仍然会报错 最好是让 Sprite组件.spriteFrame = 其他值 或销毁Sprite组件)',
-                                10: '※建议: 当$_$__spriteRef__的值为0时 才是最安全的销毁时机'
+                                4: '$_$__activeRef__ 表示引用该SpriteFrame的Sprite组件所在节点 目前总共有几个正处于激活状态 并使用 字典对象$_$__activeDic__ 保存Sprite组件的uuid',
+                                5: '$_$__onStageRef__ 表示引用该SpriteFrame的Sprite组件所在节点 目前总共有几个出现在场景里 并使用 字典对象$_$__onStageDic__ 保存Sprite组件的uuid',
+                                6: '如果该SpriteFrame被预制体的Sprite组件所引用、并且该预制体已被加载进assetManager.assets字典(发生依赖), 会添加一个 $_$__prefabRef__ 字段表示当前总共被几个预制体依赖 并使用 字典对象$_$__prefabDic__ 保存预制体的uuid',
+                                7: '如果该SpriteFrame的纹理来自远程库的图片,会添加一个 $_$__remoteURL__ 字段记录远程图片资源的位置',
+                                8: '※理论上$_$__onStageRef__ 或 $_$__activeRef__ 的值任何时候都不应该大于 $_$__spriteRef__',
+                                9: '※根据creator的循环渲染机制 当引用了该SpriteFrame的所有Sprite组件的节点 当前都没有出现在场景上或都没有被激活时(也就是同时存在于$_$__onStageDic__ 和 $_$__activeDic__字典的uuid总和为0时) 才可以通过destroy()安全销毁该SpriteFrame',
+                                10: '另外为SpriteFrame类提供了一个destorySafe字段 用于判断该SpriteFrame当前是否可以被销毁和释放(要保证引用该SpriteFrame的Sprite组件所在的节点 不会再次被加载进场景或再次被激活,否则仍然会报错 最好是让 Sprite组件.spriteFrame = 其他值 或销毁Sprite组件)',
+                                11: '※建议: 当$_$__spriteRef__的值为0时 才是最安全的销毁时机, 或者使用SpriteFrame类的forceDestroy()方法 强制解除所有引用和依赖关系,并自我销毁'
                             }
                         }
                     }
@@ -241,36 +252,42 @@ class EngineOverrider {
             return this.getComponent(componentType);
         }
 
-
-        Object.defineProperty(Node.prototype, "spriteFrame", {
-            get: function () {
-                if (!this.getComponent(Sprite)) {
-                    console.warn("本节点原本不存在Sprite组件")
-                    this.addComponent(Sprite);
-                }
-                return this.getComponent(Sprite).spriteFrame;
-            },
-            set: function (value) {
-                if (!this.getComponent(Sprite)) {
-                    console.warn("本节点原本不存在Sprite组件")
-                    this.addComponent(Sprite);
-                }
-                this.getComponent(Sprite).spriteFrame = value;
-            },
-            enumerable: true,
-            configurable: true
-        })
-
         let spriteFrame_setFunc = getSetter(Sprite, "spriteFrame");//获取 Sprite 定义的 set spriteFrame()
         Object.defineProperty(Sprite.prototype, "spriteFrame", {
             set: function (value) {
                 if (value && !value.isValid) {
                     let _url = value["$_$__remoteURL__"] || value.uuid;
-                    console.warn(`目标SpriteFrame已被销毁(destroy) 不能继续使用, 请通过<Sprite>.asyncSpriteFrame = <SpriteFrame>.uuid 来重新加载  例如 <Sprite>.asyncSpriteFrame = ${_url}`);
+                    console.warn(`目标SpriteFrame已被销毁(destroy) 不能继续使用, 请通过 sprite.asyncSpriteFrame = 目标SpriteFrame的uuid 来重新加载  例如 sprite.asyncSpriteFrame = "${_url}"`);
                     spriteFrame_setFunc.call(this, null);
                     return;
                 }
                 spriteFrame_setFunc.call(this, value);
+            },
+            enumerable: true,
+            configurable: true
+        })
+
+        //远程地址从 ImageAsset 传给 Texture2D
+        let texture2d_image = getSetter(Texture2D, "image");
+        Object.defineProperty(Texture2D.prototype, "image", {
+            set: function (value) {
+                texture2d_image.call(this, value);
+                if (value && value.uuid && value.uuid.indexOf("://") > -1) {
+                    this["$_$__remoteURL__"] = value.uuid;
+                }
+            },
+            enumerable: true,
+            configurable: true
+        })
+
+        //远程地址从 Texture2D 传给 SpriteFrame
+        let spriteFrame_texture = getSetter(SpriteFrame, "texture");
+        Object.defineProperty(SpriteFrame.prototype, "texture", {
+            set: function (value) {
+                spriteFrame_texture.call(this, value);
+                if (value && value["$_$__remoteURL__"]) {
+                    this["$_$__remoteURL__"] = value["$_$__remoteURL__"];
+                }
             },
             enumerable: true,
             configurable: true

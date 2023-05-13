@@ -1,4 +1,4 @@
-import { AssetManager, assetManager, Asset, SpriteFrame } from "cc";
+import { AssetManager, assetManager, Asset, SpriteFrame, Texture2D } from "cc";
 import { usingAssets } from "../config/usingAssets";
 
 //傻瓜式用法 let res = await asyncAsset.loadOneBundle("bundleName", "资源在bundle文件夹件里的路径", cc类型列如SpriteFrame); 自动先搜索或加载bundle 再搜索或加载资源 然后返回
@@ -181,13 +181,14 @@ class AsyncAsset {
             resUrl = resUrl.substring(0, resUrl.length - 1);
         }
         if (assetType && assetType.prototype && assetType.prototype.constructor) {//自动对应类型 补齐图片资源的后缀路径
-            if (assetType.prototype.constructor.name == "SpriteFrame") {
+            let _assetType: any = assetType;
+            if (_assetType == SpriteFrame) {
                 let arr = resUrl.split("/");
                 if (arr[arr.length - 1] !== "spriteFrame") {
                     resUrl += "/spriteFrame";
                 }
             }
-            else if (assetType.prototype.constructor.name == "Texture2D") {
+            else if (_assetType == Texture2D) {
                 let arr = resUrl.split("/");
                 if (arr[arr.length - 1] !== "texture") {
                     resUrl += "/texture";
@@ -360,13 +361,13 @@ class AsyncAsset {
                     }
                     if (object.type && object.type.prototype && object.type.prototype.constructor) {//自动对应类型 补齐图片资源的后缀路径
 
-                        if (object.type.prototype.constructor.name == "SpriteFrame") {
+                        if (object.type == SpriteFrame) {
                             let arr = object.url.split("/");
                             if (arr[arr.length - 1] !== "spriteFrame") {
                                 object.url += "/spriteFrame";
                             }
                         }
-                        else if (object.type.prototype.constructor.name == "Texture2D") {
+                        else if (object.type == Texture2D) {
                             let arr = object.url.split("/");
                             if (arr[arr.length - 1] !== "texture") {
                                 object.url += "/texture";
@@ -422,13 +423,13 @@ class AsyncAsset {
                             }
 
                             if (object.type && object.type.prototype && object.type.prototype.constructor) {//自动对应类型 补齐图片资源的后缀路径
-                                if (object.type.prototype.constructor.name == "SpriteFrame") {
+                                if (object.type == SpriteFrame) {
                                     let arr = url.split("/");
                                     if (arr[arr.length - 1] !== "spriteFrame") {
                                         url += "/spriteFrame";
                                     }
                                 }
-                                else if (object.type.prototype.constructor.name == "Texture2D") {
+                                else if (object.type == Texture2D) {
                                     let arr = url.split("/");
                                     if (arr[arr.length - 1] !== "texture") {
                                         url += "/texture";
@@ -468,30 +469,89 @@ class AsyncAsset {
     /**
      *  把assetManager.loadAny转为异步队列 函数 可以通过 await实现
      */
-    public static async loadAny<T extends Asset>(requests: string, type?: new (...agrs) => T): Promise<T>;
-    public static async loadAny<T extends Asset>(requests: string, onComplete?: (res: T) => void): Promise<T>;
-    public static async loadAny<T extends Asset>(requests: string[], type?: new (...agrs) => T): Promise<T>;
-    public static async loadAny<T extends Asset>(requests: string[], onComplete?: (res: T) => void): Promise<T>;
-    public static async loadAny<T extends Asset>(requests: string | string[], arg1?: (new (...agrs) => T) | ((res: T) => void), arg2?: (res: T) => void): Promise<T> {
-        let onComplete: any = arg1;
-        if (arg1 && arg1["__proto__"] && arg1["__proto__"].name == "Asset") {//如果这是一个类型
-            onComplete = arg2;
-        }
 
-        return new Promise<T>(resolve => {
-            assetManager.loadAny(requests, (err, res: T) => {
-                if (!err) {
-                    if (res && !res.isValid) {
-                        assetManager.releaseAsset(res);//解除依赖关系 并从缓存字典中移除
-                        assetManager.assets.remove(res.uuid);
-                        assetManager.loadAny(requests, (err, res: T) => {
-                            if (!err) {
+
+    public static async loadAny<T extends Asset>(requests: string, typeOrOnComplete?: new (...args) => T | ((res) => void), onComplete?: (res) => void): Promise<T> {
+        /* let type: new (...args) => T;
+        let onComplete: (res) => void; */
+        if (typeOrOnComplete) {
+            if (Object.getPrototypeOf(typeOrOnComplete) == Asset) {
+                return new Promise<T>(resolve => {
+                    assetManager.loadAny(requests, typeOrOnComplete, (err, res: T) => {
+                        if (!err) {
+                            if (res && !res.isValid) {
+                                assetManager.releaseAsset(res);//解除依赖关系 并从缓存字典中移除
+                                assetManager.assets.remove(res.uuid);
+                                assetManager.loadAny(requests, (err, res: T) => {
+                                    if (onComplete) {
+                                        onComplete(res);
+                                    }
+                                    resolve(res);
+                                })
+                            }
+                            else {
                                 if (onComplete) {
                                     onComplete(res);
                                 }
                                 resolve(res);
                             }
-                        })
+                        }
+                        else {
+                            if (onComplete) {
+                                onComplete(res);
+                            }
+                            resolve(null);
+                        }
+                    })
+                })
+            }
+            else {
+                let _typeOrOnComplete: any = typeOrOnComplete;
+                return new Promise<T>(resolve => {
+                    assetManager.loadAny(requests, (err, res: T) => {
+                        if (!err) {
+                            if (res && !res.isValid) {
+                                assetManager.releaseAsset(res);//解除依赖关系 并从缓存字典中移除
+                                assetManager.assets.remove(res.uuid);
+                                assetManager.loadAny(requests, (err, res: T) => {
+                                    _typeOrOnComplete(res);
+                                    resolve(res);
+                                })
+                            }
+                            else {
+                                _typeOrOnComplete(res);
+                                resolve(res);
+                            }
+                        }
+                        else {
+                            _typeOrOnComplete(res);
+                            resolve(res);
+                        }
+                    })
+                })
+
+            }
+        }
+        else {
+            return new Promise<T>(resolve => {
+                assetManager.loadAny(requests, (err, res: T) => {
+                    if (!err) {
+                        if (res && !res.isValid) {
+                            assetManager.releaseAsset(res);//解除依赖关系 并从缓存字典中移除
+                            assetManager.assets.remove(res.uuid);
+                            assetManager.loadAny(requests, (err, res: T) => {
+                                if (onComplete) {
+                                    onComplete(res);
+                                }
+                                resolve(res);
+                            })
+                        }
+                        else {
+                            if (onComplete) {
+                                onComplete(res);
+                            }
+                            resolve(res);
+                        }
                     }
                     else {
                         if (onComplete) {
@@ -499,15 +559,9 @@ class AsyncAsset {
                         }
                         resolve(res);
                     }
-                }
-                else {
-                    if (onComplete) {
-                        onComplete(null);
-                    }
-                    resolve(null);
-                }
+                })
             })
-        })
+        }
     }
 }
 export const asyncAsset = AsyncAsset;

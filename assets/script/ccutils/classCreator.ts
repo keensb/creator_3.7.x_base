@@ -32,7 +32,6 @@ if (DEBUG) {
     class GGG {//不能继承 class  否则初始化会报错   Class constructors cannot be invoked without 'new'
 
     }
-    window["GGG"] = GGG;
     window["parentClass"] = parentClass;
     window["createSonClass"] = createSonClass;
 }
