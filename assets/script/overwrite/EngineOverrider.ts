@@ -98,7 +98,7 @@ class EngineOverrider {
                         if (spriteFrame && !spriteFrame.isValid) {//如果已destroy 通过url或uuid再次加载回来
                             if ("$_$__remoteURL__" in _sfObject) {
                                 _sfObject["$_$__remoteURL__"] = _sfObject._uuid;
-                                
+
                                 let imageAsset = await asyncAsset.loadOneRemote(sfObject["$_$__remoteURL__"]) as ImageAsset;//从远程加载来的都是 ImageAsset
                                 let spriteFrame;
                                 if (imageAsset) {
@@ -182,7 +182,7 @@ class EngineOverrider {
             enumerable: true,
             configurable: true
         })
-        
+
         let activateNode = NodeActivator.prototype.activateNode;
         //在节点被激活或取消激活时 统计节点上SpriteFrame的激活引用计数
         NodeActivator.prototype.activateNode = function (node, active) {
@@ -196,7 +196,7 @@ class EngineOverrider {
                     sf["$_$__activeRef__"]++;
                     sf["$_$__activeDic__"][sp.uuid] = 1;
                 }
-                else if (!active  && sf["$_$__activeDic__"][sp.uuid]) {
+                else if (!active && sf["$_$__activeDic__"][sp.uuid]) {
                     sf["$_$__activeRef__"]--;
                     delete sf["$_$__activeDic__"][sp.uuid];
                 }
@@ -341,13 +341,13 @@ class EngineOverrider {
             return arr;
         }
 
-        const _setParent = Node.prototype.setParent;
+        const node_setParent = Node.prototype.setParent;
         Node.prototype.setParent = function setParent(value, keepWorldTransform) {
             //不能用 if(this.scene)来判断是否在场景上 this.scene 不会随着节点的 加载/移除 发生改变
             let oldStage = this.stage;
             let newStage;
 
-            _setParent.call(this, value, keepWorldTransform);
+            node_setParent.call(this, value, keepWorldTransform);
 
             newStage = this.stage;
 
@@ -550,11 +550,11 @@ class EngineOverrider {
             return this._config.getInfoWithPath(path, type);
         }
 
-        let _componentDestroy = Component.prototype.destroy;
-        Component.prototype.destroy = function (): boolean {
+        let sprite_destroy = Sprite.prototype.destroy;
+        Sprite.prototype.destroy = function (): boolean {
             let bool = this.isValid;
             if (bool) {
-                if (this.constructor == Sprite.prototype.constructor && this["spriteFrame"]) {
+                if (this.spriteFrame) {
                     let oldFrame = this["spriteFrame"];
                     if (!oldFrame["$_$__spriteRef__"]) oldFrame["$_$__spriteRef__"] = 0;
                     if (!oldFrame["$_$__spriteDic__"]) oldFrame["$_$__spriteDic__"] = {};
@@ -590,24 +590,38 @@ class EngineOverrider {
                     this["spriteFrame"] = null;
                 }
             }
-            return _componentDestroy.call(this);
+            return sprite_destroy.call(this);
         }
 
-        let _spriteFrameDestroy = SpriteFrame.prototype.destroy;
+        let spriteFrame_destroy = SpriteFrame.prototype.destroy;
         SpriteFrame.prototype.destroy = function (): boolean {
-            if (this["$_$__spriteDic__"] && Object.keys(this["$_$__spriteDic__"]).length > 0) {
-                console.warn("SpriteFrame实例 " + this.name + " 仍然被其他Sprite所引用, 不能安全销毁, 请使用forceDestroy(), 强制解除所有引用并执行销毁");
+            let key = "";
+            if (this["$_$__remoteURL__"]) {
+                key = "EngineOverrider.remoteSpriteFrameCache['" + this["$_$__remoteURL__"] + "']";
+            }
+            else {
+                key = "cc.assetManager.assets.get('" + this._uuid + "')";
+            }
+            if (this["$_$__prefabDic__"] && Object.keys(this["$_$__prefabDic__"]).length > 0) {
+                console.warn("SpriteFrame实例 目前仍然被其他预制体所依赖, 不能安全销毁, 请使用forceDestroy(), 强制解除所有引用并执行销毁\n(复制↓↓↓↓↓↓\n" + key + "\n粘贴到控制台可以获得其引用信息)");
                 return false;
             }
 
             if (this["$_$__spriteDic__"] && Object.keys(this["$_$__spriteDic__"]).length > 0) {
+                console.warn("SpriteFrame实例 目前仍然被其他Sprite所引用, 不能安全销毁, 请使用forceDestroy(), 强制解除所有引用并执行销毁\n(复制↓↓↓↓↓↓\n" + key + "\n粘贴到控制台可以获得其引用信息)");
+                return false;
+            }
+
+
+
+            /* if (this["$_$__spriteDic__"] && Object.keys(this["$_$__spriteDic__"]).length > 0) {
                 for (let key in this["$_$__spriteDic__"]) {
                     this["$_$__spriteDic__"][key].spriteFrame = null;
                     this["$_$__spriteDic__"][key] = null;
                 }
                 this["$_$__spriteDic__"] = null;
                 this["_ref"] = 0;
-            }
+            } */
             if (this["uuid"] !== undefined && EngineOverrider.remoteSpriteFrameCache[this["uuid"]]) {//从本地缓存库移除
                 delete EngineOverrider.remoteSpriteFrameCache[this["uuid"]];
             }
@@ -615,7 +629,7 @@ class EngineOverrider {
                 delete EngineOverrider.remoteSpriteFrameCache[this["$_$__remoteURL__"]];
                 this._uuid = this["$_$__remoteURL__"];//creator的清理内存机制会在destroy之后,异步清空白名单以外的字段  _uuid字段则在白名单之内
             }
-            return _spriteFrameDestroy.call(this);
+            return spriteFrame_destroy.call(this);
         }
 
         SpriteFrame.prototype.forceDestroy = function (): boolean {
@@ -635,12 +649,12 @@ class EngineOverrider {
                 delete EngineOverrider.remoteSpriteFrameCache[this["$_$__remoteURL__"]];
                 this._uuid = this["$_$__remoteURL__"];//creator的清理内存机制会在destroy之后,异步清空白名单以外的字段  _uuid字段则在白名单之内
             }
-            
-            return _spriteFrameDestroy.call(this);
+
+            return spriteFrame_destroy.call(this);
         }
 
 
-        let _nodeDestroy = Node.prototype.destroy;
+        let node_destroy = Node.prototype.destroy;
         //销毁节点时,顺带销毁节点上的Sprite组件, 触发组件的引用计数变更
         Node.prototype.destroy = function (): boolean {
             let bool = this.isValid;
@@ -650,7 +664,7 @@ class EngineOverrider {
                     sprite.destroy();
                 }
             }
-            return _nodeDestroy.call(this);
+            return node_destroy.call(this);
         }
 
 
@@ -672,13 +686,14 @@ class EngineOverrider {
                             1: '关于SpriteFrame自定义自动引用计数 $_$__xxxxRef 字段的解释(该说明仅在DEBUG版本可见):',
                             2: '为了避免SpriteFrame繁琐的自增自减操作(addRef和decRef), 采用自动统计策略 为此, 重写了一些底层方法, 但并不与 addRef和decRef 冲突',
                             3: '$_$__spriteRef__ 表示该SpriteFrame当前总共被几个Sprite组件(包括预制体上的Sprite)所引用 并使用 字典对象$_$__spriteDic__ 保存Sprite组件引用 (当销毁该SpriteFrame时, 所有Sprite组件的引用都会自动清空)',
-                            4: '$_$__prefabRef__ 表示该SpriteFrame当前总共被几个预制体上的Sprite组件所引用 并使用 字典对象$_$__prefabDic__ 保存预制体的uuid',
-                            5: '$_$__activeRef__ 表示引用该SpriteFrame的Sprite组件所在节点 目前总共有几个正处于激活状态 并使用 字典对象$_$__activeDic__ 保存Sprite组件的uuid',
-                            6: '$_$__onStageRef__ 表示引用该SpriteFrame的Sprite组件所在节点 目前总共有几个出现在场景里 并使用 字典对象$_$__onStageDic__ 保存Sprite组件的uuid',
-                            7: '※理论上$_$__onStageRef__ 或 $_$__activeRef__ 的值任何时候都不应该大于 $_$__spriteRef__',
-                            8: '※根据creator的循环渲染机制 当引用了该SpriteFrame的所有Sprite组件的节点 当前都没有出现在场景上或都没有被激活时(也就是同时存在于$_$__onStageDic__ 和 $_$__activeDic__字典的uuid总和为0时) 才可以通过destroy()安全销毁该SpriteFrame',
-                            9: '另外为SpriteFrame类提供了一个destorySafe字段 用于判断该SpriteFrame当前是否可以被销毁和释放(要保证引用该SpriteFrame的Sprite组件所在的节点 不会再次被加载进场景或再次被激活,否则仍然会报错 最好是让 Sprite组件.spriteFrame = 其他值 或销毁Sprite组件)',
-                            10: '※建议: 当$_$__spriteRef__的值为0时 才是最安全的销毁时机'
+                            4: '$_$__activeRef__ 表示引用该SpriteFrame的Sprite组件所在节点 目前总共有几个正处于激活状态 并使用 字典对象$_$__activeDic__ 保存Sprite组件的uuid',
+                            5: '$_$__onStageRef__ 表示引用该SpriteFrame的Sprite组件所在节点 目前总共有几个出现在场景里 并使用 字典对象$_$__onStageDic__ 保存Sprite组件的uuid',
+                            6: '如果该SpriteFrame被预制体的Sprite组件所引用、并且该预制体已被加载进assetManager.assets字典(发生依赖), 会添加一个 $_$__prefabRef__ 字段表示当前总共被几个预制体依赖 并使用 字典对象$_$__prefabDic__ 保存预制体的uuid',
+                            7: '如果该SpriteFrame的纹理来自远程库的图片,会添加一个 $_$__remoteURL__ 字段记录远程图片资源的位置',
+                            8: '※理论上$_$__onStageRef__ 或 $_$__activeRef__ 的值任何时候都不应该大于 $_$__spriteRef__',
+                            9: '※根据creator的循环渲染机制 当引用了该SpriteFrame的所有Sprite组件的节点 当前都没有出现在场景上或都没有被激活时(也就是同时存在于$_$__onStageDic__ 和 $_$__activeDic__字典的uuid总和为0时) 才可以通过destroy()安全销毁该SpriteFrame',
+                            10: '另外为SpriteFrame类提供了一个destorySafe字段 用于判断该SpriteFrame当前是否可以被销毁和释放(要保证引用该SpriteFrame的Sprite组件所在的节点 不会再次被加载进场景或再次被激活,否则仍然会报错 最好是让 Sprite组件.spriteFrame = 其他值 或销毁Sprite组件)',
+                            11: '※建议: 当$_$__spriteRef__的值为0时 才是最安全的销毁时机, 或者使用SpriteFrame类的forceDestroy()方法 强制解除所有引用和依赖关系,并自我销毁'
                         }
                     }
                 }
