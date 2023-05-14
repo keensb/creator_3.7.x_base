@@ -93,10 +93,12 @@ class EngineOverrider {
                 if (typeof sfObject == "object") {// SpriteFrame实例       如果 sprite.spriteFrame != null 可以通过 sprite.asyncSpriteFrame = sprite.spriteFrame 的方式, 再次加载回被destroy的SpriteFrame
                     if (sfObject instanceof SpriteFrame) {
                         spriteFrame = sfObject as SpriteFrame;
-
+                        let _sfObject: any = sfObject;
                         //确定是SpriteFrame实例
                         if (spriteFrame && !spriteFrame.isValid) {//如果已destroy 通过url或uuid再次加载回来
-                            if (sfObject["$_$__remoteURL__"]) {
+                            if ("$_$__remoteURL__" in _sfObject) {
+                                _sfObject["$_$__remoteURL__"] = _sfObject._uuid;
+                                
                                 let imageAsset = await asyncAsset.loadOneRemote(sfObject["$_$__remoteURL__"]) as ImageAsset;//从远程加载来的都是 ImageAsset
                                 let spriteFrame;
                                 if (imageAsset) {
@@ -105,6 +107,7 @@ class EngineOverrider {
                                     texture.image = imageAsset;
                                     spriteFrame.texture = texture;
                                     spriteFrame["$_$__remoteURL__"] = sfObject["$_$__remoteURL__"];
+                                    spriteFrame._uuid = spriteFrame["$_$__remoteURL__"];
                                     EngineOverrider.remoteSpriteFrameCache[sfObject["$_$__remoteURL__"]] = spriteFrame;
                                 }
                                 if (_this.isValid) _this.spriteFrame = spriteFrame;
@@ -179,10 +182,10 @@ class EngineOverrider {
             enumerable: true,
             configurable: true
         })
-
-        let activateNode = director._nodeActivator.activateNode;
+        
+        let activateNode = NodeActivator.prototype.activateNode;
         //在节点被激活或取消激活时 统计节点上SpriteFrame的激活引用计数
-        director._nodeActivator.activateNode = function (node, active) {
+        NodeActivator.prototype.activateNode = function (node, active) {
             activateNode.call(this, node, active);
             if (node.getComponent(Sprite) && node.getComponent(Sprite).spriteFrame) {
                 let sp = node.getComponent(Sprite);
@@ -193,7 +196,7 @@ class EngineOverrider {
                     sf["$_$__activeRef__"]++;
                     sf["$_$__activeDic__"][sp.uuid] = 1;
                 }
-                else if (sf["$_$__activeDic__"][sp.uuid]) {
+                else if (!active  && sf["$_$__activeDic__"][sp.uuid]) {
                     sf["$_$__activeRef__"]--;
                     delete sf["$_$__activeDic__"][sp.uuid];
                 }
@@ -290,6 +293,7 @@ class EngineOverrider {
                 spriteFrame_texture.call(this, value);
                 if (value && value["$_$__remoteURL__"]) {
                     this["$_$__remoteURL__"] = value["$_$__remoteURL__"];
+                    this._uuid = value["$_$__remoteURL__"];
                 }
                 else {
                     delete this["$_$__remoteURL__"];
@@ -609,6 +613,7 @@ class EngineOverrider {
             }
             if (this["$_$__remoteURL__"] !== undefined && EngineOverrider.remoteSpriteFrameCache[this["$_$__remoteURL__"]]) {//从本地缓存库移除
                 delete EngineOverrider.remoteSpriteFrameCache[this["$_$__remoteURL__"]];
+                this._uuid = this["$_$__remoteURL__"];//creator的清理内存机制会在destroy之后,异步清空白名单以外的字段  _uuid字段则在白名单之内
             }
             return _spriteFrameDestroy.call(this);
         }
@@ -622,25 +627,15 @@ class EngineOverrider {
                 }
                 this["$_$__spriteDic__"] = null;
                 this["_ref"] = 0;
-                //assetManager.releaseAsset(this);//解除依赖关系 并从缓存字典(assetManager.assets._map)中移除 以便下次能重新加载
-                //if (assetManager.assets) {
-                //assetManager.assets.remove(this.uuid);
-                //}
             }
             if (this["uuid"] !== undefined && EngineOverrider.remoteSpriteFrameCache[this["uuid"]]) {//从本地缓存库移除
                 delete EngineOverrider.remoteSpriteFrameCache[this["uuid"]];
             }
             if (this["$_$__remoteURL__"] !== undefined && EngineOverrider.remoteSpriteFrameCache[this["$_$__remoteURL__"]]) {//从本地缓存库移除
                 delete EngineOverrider.remoteSpriteFrameCache[this["$_$__remoteURL__"]];
+                this._uuid = this["$_$__remoteURL__"];//creator的清理内存机制会在destroy之后,异步清空白名单以外的字段  _uuid字段则在白名单之内
             }
-            //连纹理数据也一并释放
-            /* if (this.texture && this.texture.isValid) {
-                this.texture.destroy();
-                if (assetManager.assets) {
-                    assetManager.releaseAsset(this.texture)
-                    assetManager.assets.remove(this.texture.uuid)
-                }  
-            } */
+            
             return _spriteFrameDestroy.call(this);
         }
 
