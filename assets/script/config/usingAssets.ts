@@ -30,6 +30,6 @@ globalThis["usingAssets"] = usingAssets;
 
 
 export const usingBundles = {
-	pic: "pic",
+	pic: "",
 }
 globalThis["usingBundles"] = usingBundles;
