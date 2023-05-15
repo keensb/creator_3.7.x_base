@@ -3,7 +3,7 @@
 //cocos creator 3.0+ 引擎代码位置  可以尝试覆盖这几个位置
 //CocosDashboard安装目录\resources\.editors\Creator\3.6.0\resources\resources\3d\engine\bin\.cache\dev\preview\bundled\index.js  主要
 //CocosDashboard安装目录\resources\.editors\Creator\3.6.0\resources\resources\3d\engine\cocos\core\scene-graph\node.ts  次要
-import { Asset, assetManager, AssetManager, CCObject, Component, debug, director, errorID, ImageAsset, Material, Node, NodeActivator, NodeEventType, path, Prefab, RenderTexture, Scene, Sprite, SpriteAtlas, SpriteFrame, Texture2D, UIOpacity, UIRenderer, UITransform, warn, __private } from 'cc';
+import { Asset, assetManager, AssetManager, CCObject, Component, debug, director, errorID, ImageAsset, Material, misc, Node, NodeActivator, NodeEventType, path, Prefab, RenderTexture, Scene, Sprite, SpriteAtlas, SpriteFrame, Texture2D, UIOpacity, UIRenderer, UITransform, warn, __private } from 'cc';
 import { DEBUG } from 'cc/env';
 import { decodeUuid } from '../ccutils/compressedUuid';
 import { getSetter } from '../ccutils/Super_Getter_Setter';
@@ -852,9 +852,6 @@ class EngineOverrider {
                 }
             }
         }
-
-
-
 
         /* let scene_activate = Scene.prototype["_activate"];
         Scene.prototype["_activate"] = function () {

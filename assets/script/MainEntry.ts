@@ -71,7 +71,7 @@ export class MainEntry extends Component {
              }
          }) */
 
-        let bundle = await asyncAsset.loadOneBundle("pic");
+        //let bundle = await asyncAsset.loadOneBundle("pic");
         /* console.log(assetManager.getBundle("pic"), bundle)
         assetManager.removeBundle(bundle);
         console.log(assetManager.getBundle("pic"), bundle) */

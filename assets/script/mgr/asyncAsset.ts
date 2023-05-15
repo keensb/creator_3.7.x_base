@@ -1,22 +1,14 @@
 import { AssetManager, assetManager, Asset, SpriteFrame, Texture2D } from "cc";
-import { usingAssets } from "../config/usingAssets";
+import { DEBUG } from "cc/env";
+import { usingAssets, usingBundles } from "../config/usingAssets";
 
 //傻瓜式用法 let res = await asyncAsset.loadOneBundle("bundleName", "资源在bundle文件夹件里的路径", cc类型列如SpriteFrame); 自动先搜索或加载bundle 再搜索或加载资源 然后返回
 
 /*
-//关于官方文档 的 "可传入进度回调以及完成回调，通过组合 `request` 和 `options` 参数，几乎可以实现和扩展所有想要的加载效果。非常建议"  --- request 和 options 是个什么鬼??
-1 首先在控制台输入 
-    cc.assetManager.loadAny 
-  会返回代码块 点击代码块可以定位到实现assetManager.loadAny的位置
-
-2 在 public loadAny() 函数定义的末行  "pipeline.async(task);" 打个断点
-
-3 在控制台输入 
-    cc.assetManager.loadAny({'path': 'images/background'}, {'myParam': 'important'}, ()=>{console.log("这是进度回调 progress callback")}, ()=>{console.log("这是完成回调 complete callback")});
-
-4 断点被命中时 在控制台依次输入 request、 options、 onProgress、 onComplete  看看这些都是啥
-
-5 省流: request={'path': 'images/background'}  options={'myParam': 'important'}  
+    此工具类 适用于加载 Bundle包里的资源(因为此类资源能随着发布版本出包到asset文件夹或remote文件夹);
+    不在Bundle包中的资源, 不建议通过代码来加载;
+    除非你确定它们在发布的时候会被打包进asset或remote文件夹, (最好在开发阶段就经常测试一下发布版的效果)
+    否则在debug版能正常加载的资源, 到了release版却不能加载就拉胯了
 */
 
 class AsyncAsset {
@@ -25,6 +17,10 @@ class AsyncAsset {
      */
     public static async loadOneBundle(bundleName: string, loadAllSubAssets = false, onProgress?: (finished, total, res?) => void, onComplete?: (error?, resArray?) => void,): Promise<AssetManager.Bundle> {
         return new Promise<AssetManager.Bundle>(resolve => {
+            if (DEBUG && bundleName in usingBundles == false) {
+                console.log("%cBundle: %c" + bundleName + "\n%c未在usingBundles字典中注册过!  如果你确定在项目里存在Bundle, 请双击根目录下的工具 'usingAssetExport_3x.py' 自动注册","color:#b36d41","color:#ff0000","color:#b36d41")
+                resolve(null);
+            }
             let _bundle = assetManager.getBundle(bundleName);
             if (_bundle) {
                 if (!loadAllSubAssets) {
@@ -50,35 +46,37 @@ class AsyncAsset {
                 }
                 return;
             }
-            assetManager.loadBundle(bundleName, (error, bundle) => {
-                if (!error) {
-                    if (!loadAllSubAssets) {
-                        resolve(bundle);
+            try {
+                assetManager.loadBundle(bundleName, (error, bundle) => {
+                    if (!error) {
+                        if (!loadAllSubAssets) {
+                            resolve(bundle);
+                        }
+                        else {
+                            bundle.loadDir("./", (finished, total, res) => {
+                                if (onProgress) {
+                                    onProgress(finished, total, res);
+                                }
+                            },
+                                (error, resArray) => {
+                                    if (onComplete) {
+                                        onComplete(error, resArray);
+                                    }
+                                    if (!error) {
+                                        resolve(bundle);
+                                    }
+                                    else {
+                                        resolve(null);//即使加载失败了也调用resolve() 当做成功来进行异步回调, 不过此时返回的是null, 表示该bundle不存在
+                                    }
+                                })
+                        }
                     }
                     else {
-                        bundle.loadDir("./", (finished, total, res) => {
-                            if (onProgress) {
-                                onProgress(finished, total, res);
-                            }
-                        },
-                            (error, resArray) => {
-                                if (onComplete) {
-                                    onComplete(error, resArray);
-                                }
-                                if (!error) {
-                                    resolve(bundle);
-                                }
-                                else {
-                                    resolve(null);//即使加载失败了也调用resolve() 当做成功来进行异步回调, 不过此时返回的是null, 表示该bundle不存在
-                                }
-                            })
+                        console.info("bundle " + bundleName + " 不存在!")
+                        resolve(null);//即使加载失败了也调用resolve() 当做成功来进行异步回调, 不过此时返回的是null, 表示该bundle不存在
                     }
-                }
-                else {
-                    console.info("bundle " + bundleName + " 不存在!")
-                    resolve(null);//即使加载失败了也调用resolve() 当做成功来进行异步回调, 不过此时返回的是null, 表示该bundle不存在
-                }
-            })
+                })
+            } catch (err) {console.log(err); }
         });
     }
 
@@ -88,7 +86,6 @@ class AsyncAsset {
      *  如果要加载 bundle 本身的文件夹, 第二个参数写 "./" 或使用默认值就好 
      */
     public static async bundleLoadDir(bundle: AssetManager.Bundle | string, dirName: string = "./", onProgress?: (finished, total, res?) => void, onComplete?: (error?, resArray?) => void): Promise<Asset[]> {
-        let destroyedCount = 0;
         let destroyedList: Asset[] = [];
         let _bundle: any = bundle;
         if (_bundle instanceof AssetManager.Bundle == false) {

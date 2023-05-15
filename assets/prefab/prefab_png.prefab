@@ -31,8 +31,8 @@
     },
     "_lpos": {
       "__type__": "cc.Vec3",
-      "x": 480,
-      "y": 320.00000000000006,
+      "x": 0,
+      "y": 0,
       "z": 0
     },
     "_lrot": {
@@ -107,7 +107,7 @@
       "a": 255
     },
     "_spriteFrame": {
-      "__uuid__": "9bb7d5c5-b071-45b5-a728-126e4ae9c281@f9941",
+      "__uuid__": "61ae7673-8c17-413a-8b9f-0bd12cbbac2f@f9941",
       "__expectedType__": "cc.SpriteFrame"
     },
     "_type": 0,
@@ -138,6 +138,7 @@
       "__id__": 0
     },
     "fileId": "51bg6Tx6ZPc7PdjTJPjPGF",
+    "instance": null,
     "targetOverrides": null
   }
 ]
