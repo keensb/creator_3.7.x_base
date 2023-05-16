@@ -20,6 +20,7 @@ class MyClass2(){//不会被注册进来
 
 '''
 
+
 def findTargetInDir(dirPath):
     # print("dirPath =",dirPath)
     list = os.listdir(dirPath)  # 列出文件夹下所有的目录与文件
@@ -179,29 +180,56 @@ for i in range(len(pathList)):
 
 newfile.write("\n" +
               "export class ClassDictionary {\n" +
-              "\tpublic static classDic: { [key: string]: any } = {};\n" + 
-              "\t/**\n" + 
-              "\t * 获得一个实例或Class的类型名称\n" + 
-              "\t * \n" + 
-              "\t */\n" + 
-              "\tpublic static getClassNameByTarget(anyObj: any): string {\n" + 
+              "\tpublic static classDic: { [key: string]: any } = {};\n" +
+              "\t/**\n" +
+              "\t * 获得一个实例或Class的类型名称\n" +
+              "\t * \n" +
+              "\t */\n" +
+              "\tpublic static getClassNameByTarget(anyObj: any): string {\n" +
               "\t\tif (!anyObj) {\n" +
               "\t\t\tlet proto = Object.prototype.toString.call(anyObj).split(" ")[1].split(\"]\")[0];\n" +
               "\t\t\treturn proto;\n" +
               "\t\t}\n" +
               "\t\tif (anyObj) {\n" +
               "\t\t\t//anyObj非空时 有 [\"__class__\"] 的是实例 否则是一个Class\n" +
+              "\t\t\tif (anyObj.prototype && anyObj.prototype[\"__classname__\"]) return anyObj.prototype[\"__classname__\"];//Class\n" +
               "\t\t\tif (anyObj.prototype && anyObj.prototype[\"__class__\"]) return anyObj.prototype[\"__class__\"];//Class\n" +
               "\t\t\tif (anyObj.prototype && anyObj.prototype[\"constructor\"]) return anyObj.prototype[\"constructor\"].name;//Class\n" +
               "\t\t\tif (anyObj[\"constructor\"] && anyObj[\"constructor\"].name) return anyObj[\"constructor\"].name;//实例\n" +
               "\t\t\tif (anyObj.name) return anyObj.name;//Class\n" +
+              "\t\t\tif (anyObj[\"__classname__\"]) return anyObj[\"__classname__\"];//实例\n" +
               "\t\t\tif (anyObj[\"__class__\"]) return anyObj[\"__class__\"];//实例\n" +
               "\t\t\tif (anyObj[\"__proto__\"] && anyObj[\"__proto__\"].name) return anyObj[\"__proto__\"].name;//实例   \n" +
-              "\t\t}\n\n" +
-                
+              "\t\t}\n" +
+
               "\t\tlet str = Object.prototype.toLocaleString.call(anyObj);\n" +
               "\t\tlet str1: string = str.split(" ")[1];\n" +
               "\t\treturn str1.split(\"]\")[0];\n" +
+              "\t}\n\n" +
+              "\t/**\n" +
+              "\t * 获得项目里一个实例的原类型引用 可以用来创建实例 或比较类型\n" +
+              "\t * @example\n" +
+              "\t * 1\n" +
+              "\t * var node:Texture2D = new Texture2D();\n" +
+              "\t * var cls = ClassDictionary.getClassByTarget(node);//返回 Texture2D\n" +
+              "\t * var node2:cls = new cls();\n" +
+              "\t * \n" +
+              "\t * 2\n" +
+              "\t * var a:Sprite = new Sprite();\n" +
+              "\t * var b:Button = new Button();\n" +
+              "\t * if(ClassDictionary.getClassByTarget(a) == ClassDictionary.getClassByTarget(b)){\n" +
+              "\t * 	......\n" +
+              "\t * }\n" +
+              "\t * \n" +
+              "\t */\n" +
+              "\tpublic static getClassByTarget<T>(anyObj: T): new (...args) => T {\n" +
+              "\t\tif (anyObj === null || anyObj === undefined) {//0 或 boolean 都会返回类型\n" +
+              "\t\t\treturn null;\n" +
+              "\t\t}\n" +
+              "\t\tif (typeof anyObj == \"function\") {\n" +
+              "\t\t\treturn <any>anyObj;\n" +
+              "\t\t}\n" +
+              "\t\treturn <any>anyObj[\"constructor\"];\n" +
               "\t}\n" +
               "}\n\n"
               )
@@ -219,7 +247,7 @@ for i in range(len(sxList)):
     key = sxList[i]
     if key == "ClassDictionary":
         continue
-    newfile.write("ClassDictionary.classDic[\"" + key + "\"] = "+key+";\n")
+    newfile.write("ClassDictionary.classDic[\"" + key + "\"] = " + key + ";\n")
 
 
 newfile.close()
