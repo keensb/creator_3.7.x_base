@@ -92,6 +92,16 @@ class AsyncAsset {
             _bundle = await asyncAsset.loadOneBundle(_bundle);
         }
         return new Promise<Asset[]>(resolve => {
+            if (!_bundle) {
+                resolve(null);
+                if (onProgress) {
+                    onProgress(0, 0, "");
+                }
+                if (onComplete) {
+                    onComplete(null);
+                }
+                return;
+            }
             _bundle.loadDir(dirName,
                 (finished, total, res) => {
                     if (onProgress) {
@@ -420,7 +430,7 @@ class AsyncAsset {
      *  把assetManager.loadAny转为异步队列 函数 可以通过 await实现
      */
     public static async loadAny<T extends Asset>(requests: string, typeOrOnComplete?: (res) => void): Promise<T>;
-    public static async loadAny<T extends Asset>(requests: string, typeOrOnComplete?: (new (...args) => T) , onComplete?: (res) => void): Promise<T>;
+    public static async loadAny<T extends Asset>(requests: string, typeOrOnComplete?: (new (...args) => T), onComplete?: (res) => void): Promise<T>;
     public static async loadAny<T extends Asset>(requests: string, typeOrOnComplete?: (new (...args) => T) | ((res) => void), onComplete?: (res) => void): Promise<T> {
         /* let type: new (...args) => T;
         let onComplete: (res) => void; */
