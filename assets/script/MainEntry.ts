@@ -1,8 +1,8 @@
-import { _decorator, Component, Node, assetManager, Sprite, SpriteFrame, Button, NodeEventType, Texture2D, AudioClip, AudioSource, Asset } from 'cc';
+import { _decorator, Component, Node, assetManager, Sprite, SpriteFrame, Button, NodeEventType, Texture2D, AudioClip, AudioSource, Asset, SpriteAtlas, find } from 'cc';
 import { DEBUG } from 'cc/env';
+import { ClassDictionary } from './ClassDictionary';
 import { usingAssets } from './config/usingAssets';
-
-
+import { AnimationLite } from './customComponent/AnimationLite';
 
 import { asyncAsset } from './mgr/asyncAsset';
 
@@ -41,15 +41,38 @@ export class MainEntry extends Component {
         window["f1"] = this.faceSp;
         window["f2"] = this.faceSp2;
 
-        window["f1"].asyncSpriteFrame = "https://baishancdn.hicnhm.com/beiji_res/assets/avatar3/300000010_1_1.png";
-        console.log("xxxxxxx", window["f1"].asyncSpriteFrame);//异步进行中,获得的是 https://baishancdn.hicnhm.com/beiji_res/assets/avatar3/300000010_1_1.png
-        setTimeout(() => { 
-            console.log("yyyyyyyy", window["f1"].asyncSpriteFrame);//异步完成后 获得的是 SpriteFrame实例
-        },2000)
+        window["f1"].asyncSpriteFrame = 'http://172.16.70.38:5050/public/title.jpg';//"https://baishancdn.hicnhm.com/beiji_res/assets/avatar3/300000010_1_1.png";
+
+
+        window["ClassDictionary"] = ClassDictionary;
+
     }
 
-    start() {
-        
+    async start() {
+        //for(let x in usingAssets.atlas.girlTexture0_plist)
+
+        let listObj: { [key: string]: SpriteAtlas } = {};
+        let count = 0;
+        for (let i = 0; i < 9; i++) {
+            assetManager.loadAny(usingAssets.atlas["girlTexture" + i + "_plist"].uuid, null, (err, res: SpriteAtlas) => {
+                listObj[i] = res;
+                console.log("iiiiiiiiiiiii", i, listObj[i]);
+              
+                if (Object.keys(listObj).length == 9) {
+                    let sfArr: SpriteFrame[] = [];
+                    for (let j = 0; j < 9; j++) {
+                        console.log("jjjjjjjjjjjjj", j, listObj[j]);
+                        for (let key in listObj[j].spriteFrames) {
+                            sfArr.push(listObj[j].spriteFrames[key]);
+                        }
+                    }
+
+                    let anim: any = new AnimationLite(sfArr, 30);
+                    window["anim"] = anim;
+                    anim.parent = find("Canvas");
+                }
+            });
+        }
     }
 
     private isLoading: boolean = false;
@@ -75,12 +98,12 @@ export class MainEntry extends Component {
         /* console.log(assetManager.getBundle("pic"), bundle)
         assetManager.removeBundle(bundle);
         console.log(assetManager.getBundle("pic"), bundle) */
-         
+
         let res = await asyncAsset.loadAny("ef9a2b8b-daff-4479-b976-a33234861fa3@f9941", SpriteFrame);
         this.faceSp.spriteFrame = res;
         this.faceSp2.spriteFrame = res
         this.currentSF = res;
-        window["currentSF"] = this.currentSF;  
+        window["currentSF"] = this.currentSF;
         this.isLoading = false;
         //////////////////////////
         /* let imageAsset = await asyncAsset.loadOneRemote("https://baishancdn.hicnhm.com/beiji_res/assets/avatar3/300000010_1_1.png");
@@ -94,15 +117,15 @@ export class MainEntry extends Component {
         this.isLoading = false;*/
         //////////////////////////
         //assetManager.loadAny("ef9a2b8b-daff-4479-b976-a33234861fa3@f9941", null, null, (err, res) => {
-       /* assetManager.loadAny("ef9a2b8b-daff-4479-b976-a33234861fa3@f9941", (err, res: Asset) => {
-            this.faceSp.spriteFrame = res as SpriteFrame;
-            this.faceSp2.spriteFrame = res as SpriteFrame;
-            this.currentSF = res as SpriteFrame;
-            this.isLoading = false;
-            window["currentSF"] = this.currentSF;
-        })  */
+        /* assetManager.loadAny("ef9a2b8b-daff-4479-b976-a33234861fa3@f9941", (err, res: Asset) => {
+             this.faceSp.spriteFrame = res as SpriteFrame;
+             this.faceSp2.spriteFrame = res as SpriteFrame;
+             this.currentSF = res as SpriteFrame;
+             this.isLoading = false;
+             window["currentSF"] = this.currentSF;
+         })  */
 
-        
+
 
         //////////////////////////
         /* let res = await asyncAsset.bundleLoadOneAsset("pic", usingAssets.pic.big_daofengyizhi_png.url, SpriteFrame);
@@ -112,7 +135,7 @@ export class MainEntry extends Component {
         this.isLoading = false;*/
         //////////////////////////
 
-        
+
     }
 
     private unUseAsset(): void {
@@ -143,7 +166,8 @@ export class MainEntry extends Component {
     }
 
     update(deltaTime: number) {
-
+        let a = ClassDictionary.getClassByTarget(1);
     }
 }
 
+window["MainEntry"] = MainEntry;

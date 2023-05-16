@@ -1,5 +1,5 @@
-import { AssetManager, assetManager, Asset, SpriteFrame, Texture2D } from "cc";
 import { DEBUG } from "cc/env";
+import { AssetManager, assetManager, Asset, SpriteFrame, Texture2D } from "cc";
 import { usingAssets, usingBundles } from "../config/usingAssets";
 
 //傻瓜式用法 let res = await asyncAsset.loadOneBundle("bundleName", "资源在bundle文件夹件里的路径", cc类型列如SpriteFrame); 自动先搜索或加载bundle 再搜索或加载资源 然后返回
@@ -15,10 +15,10 @@ class AsyncAsset {
     /**
      * 通过异步队列的方式加载一个分包 bundle , 第二个参数的用途是: 询问是否在加载bundle的同时, 顺便把该bundle下的所有子资源都一并加载了
      */
-    public static async loadOneBundle(bundleName: string, loadAllSubAssets = false, onProgress?: (finished, total, res?) => void, onComplete?: (error?, resArray?) => void,): Promise<AssetManager.Bundle> {
+    public static async loadOneBundle(bundleName: string, loadAllSubAssets = false, onProgress?: (finished, total, res?) => void, onComplete?: (resArray?) => void,): Promise<AssetManager.Bundle> {
         return new Promise<AssetManager.Bundle>(resolve => {
             if (DEBUG && bundleName in usingBundles == false) {
-                console.log("%cBundle: %c" + bundleName + "\n%c未在usingBundles字典中注册过!  如果你确定在项目里存在Bundle, 请双击根目录下的工具 'usingAssetExport_3x.py' 自动注册","color:#b36d41","color:#ff0000","color:#b36d41")
+                console.log("%cBundle: %c" + bundleName + "\n%c未在usingBundles字典中注册过!  如果你确定在项目里存在Bundle, 请双击根目录下的工具 'usingAssetExport_3x.py' 自动注册", "color:#b36d41", "color:#ff0000", "color:#b36d41")
                 resolve(null);
             }
             let _bundle = assetManager.getBundle(bundleName);
@@ -34,7 +34,7 @@ class AsyncAsset {
                     },
                         (error, resArray) => {
                             if (onComplete) {
-                                onComplete(error, resArray);
+                                onComplete(resArray);
                             }
                             if (!error) {
                                 resolve(_bundle);
@@ -60,7 +60,7 @@ class AsyncAsset {
                             },
                                 (error, resArray) => {
                                     if (onComplete) {
-                                        onComplete(error, resArray);
+                                        onComplete(resArray);
                                     }
                                     if (!error) {
                                         resolve(bundle);
@@ -76,7 +76,7 @@ class AsyncAsset {
                         resolve(null);//即使加载失败了也调用resolve() 当做成功来进行异步回调, 不过此时返回的是null, 表示该bundle不存在
                     }
                 })
-            } catch (err) {console.log(err); }
+            } catch (err) { console.log(err); }
         });
     }
 
@@ -85,7 +85,7 @@ class AsyncAsset {
      *  让一个 AssetManager.bundle 对象加载在其主文件夹下的某个文件下的所有资源 如果资源已被销毁, 将自动移除出缓存字典并重新加载
      *  如果要加载 bundle 本身的文件夹, 第二个参数写 "./" 或使用默认值就好 
      */
-    public static async bundleLoadDir(bundle: AssetManager.Bundle | string, dirName: string = "./", onProgress?: (finished, total, res?) => void, onComplete?: (error?, resArray?) => void): Promise<Asset[]> {
+    public static async bundleLoadDir(bundle: AssetManager.Bundle | string, dirName: string = "./", onProgress?: (finished, total, res?) => void, onComplete?: (resArray?) => void): Promise<Asset[]> {
         let destroyedList: Asset[] = [];
         let _bundle: any = bundle;
         if (_bundle instanceof AssetManager.Bundle == false) {
@@ -110,7 +110,7 @@ class AsyncAsset {
                     }
                     if (destroyedList.length == 0) {//所有资源均没有被销毁过
                         if (onComplete) {
-                            onComplete(error, resArray);
+                            onComplete(resArray);
                         }
                         if (!error) {
                             resolve(resArray);
@@ -138,7 +138,7 @@ class AsyncAsset {
                                 }
                                 if (count == 0) {
                                     if (onComplete) {
-                                        onComplete(error, resArray);
+                                        onComplete(resArray);
                                     }
                                     resolve(resArray);
                                 }
@@ -156,9 +156,9 @@ class AsyncAsset {
      *  (注意:第二个参数不要带后缀名 例如 aaa/bbb.json 只要写 "aaa/bbb"就好)
      *  3.x的巨坑: 如果加载的是图片资源 例如 aa/bb/img.jpg   要写成 "aa/bb/img/spriteFrame"(加载出来的是SpriteFrame对象) 或 "aa/bb/img/texture"(加载出来的是Texture2D对象) 直接写 "aa/bb/img" 加载出来的是不伦不类的 ImageAsset 对象
      */
-    public static async bundleLoadOneAsset<T>(bundle: AssetManager.Bundle | string, urlObj: string, assetType?: new (...args) => T, onComplete?: (currentRes?: new (...args) => T) => void): Promise<T>;
-    public static async bundleLoadOneAsset<T>(bundle: AssetManager.Bundle | string, urlObj: { url: string }, assetType?: new (...args) => T, onComplete?: (currentRes?: new (...args) => T) => void): Promise<T>;
-    public static async bundleLoadOneAsset<T>(bundle: AssetManager.Bundle | string, urlObj: string | { url: string }, assetType?: new (...args) => T, onComplete?: (currentRes?: any) => void): Promise<T> {
+    public static async bundleLoadOneAsset<T extends Asset>(bundle: AssetManager.Bundle | string, urlObj: string, assetType?: new (...args) => T, onComplete?: (currentRes: T) => void): Promise<T>;
+    public static async bundleLoadOneAsset<T extends Asset>(bundle: AssetManager.Bundle | string, urlObj: { url: string }, assetType?: new (...args) => T, onComplete?: (currentRes?: T) => void): Promise<T>;
+    public static async bundleLoadOneAsset<T extends Asset>(bundle: AssetManager.Bundle | string, urlObj: string | { url: string }, assetType?: new (...args) => T, onComplete?: (currentRes?: T) => void): Promise<T> {
         let _bundle: any = bundle;
         if (typeof bundle == "string") {
             _bundle = assetManager.getBundle(bundle);
@@ -196,6 +196,9 @@ class AsyncAsset {
         return new Promise<T>(resolve => {
             if (!_bundle) {
                 console.warn("bundle不存在, 或未被加载");
+                if (onComplete) {
+                    onComplete(null);
+                }
                 resolve(null);
                 return;
             }
@@ -208,12 +211,18 @@ class AsyncAsset {
                 assetManager.releaseAsset(_res);//解除依赖关系 并从缓存字典中移除
                 assetManager.assets.remove(_res.uuid);
             }
-            _bundle.load(resUrl, _assetType, (error, res: any) => {
+            _bundle.load(resUrl, _assetType, (error, res: T) => {
                 if (!error) {
+                    if (onComplete) {
+                        onComplete(res);
+                    }
                     resolve(res);
                 }
                 else {
                     console.warn("资源不存在, 请检查路径bundle " + _bundle.name + "所在路径" + _bundle.base + "下是否存在文件路径" + resUrl);//如果不存在,那多半是用错bundle或bundle路径了
+                    if (onComplete) {
+                        onComplete(res);
+                    }
                     resolve(null);//即使加载失败了也调用resolve() 当做成功来进行异步回调, 不过此时返回的是null, 表示该bundle不存在
                 }
             })
@@ -304,7 +313,7 @@ class AsyncAsset {
     /**
      *  直接通过usingAssets里的配置获取其中一个资源
      */
-    public static async loadOneUsingAsset<T>(usingAsset: { bundle: string, url: string, type: new (...args) => T }, onComplete?: (currentRes?: new (...args) => T) => void): Promise<T> {
+    public static async loadOneUsingAsset<T>(usingAsset: { bundle: string, url: string, type: new (...args) => T }, onComplete?: (res: T) => void): Promise<T> {
         let res = await asyncAsset.bundleLoadOneAsset(usingAsset.bundle, usingAsset);
         return new Promise<any>(resolve => {
             if (onComplete) {
@@ -318,7 +327,7 @@ class AsyncAsset {
     /**
      *  让一个 AssetManager.bundle 对象加载在其主文件夹下、并且在usingAssets.ts文件中配置过的所有资源 
      */
-    public static async bundleLoadAllUsingAssets(bundle: AssetManager.Bundle | string, onProgress?: (finished: number, total: number, finishPath?: string) => void, onComplete?: () => void): Promise<void> {
+    public static async bundleLoadAllUsingAssets(bundle: AssetManager.Bundle | string, onProgress?: (finished: number, total: number, finishPath?: string) => void, onComplete?: (resArr?: Asset[]) => void): Promise<Asset[]> {
         let _bundle: any = bundle;
         if (typeof bundle == "string") {
             _bundle = assetManager.getBundle(bundle);
@@ -327,10 +336,16 @@ class AsyncAsset {
             }
         }
 
-        return new Promise(resolve => {
+        return new Promise<Asset[]>(resolve => {
             if (!_bundle) {
                 console.warn("bundle不存在, 或未被加载");
                 resolve(null);
+                if (onProgress) {
+                    onProgress(0, 0, "");
+                }
+                if (onComplete) {
+                    onComplete(null);
+                }
                 return;
             }
 
@@ -378,6 +393,7 @@ class AsyncAsset {
                         assetManager.assets.remove(_res.uuid);
                     }
 
+                    let resArr: Asset[] = [];
                     _bundle.load(object.url, object.type, (err, res) => {
                         fin++;
                         if (err != undefined) {
@@ -386,77 +402,14 @@ class AsyncAsset {
                         if (onProgress) {
                             onProgress(fin, total, object.url);
                         }
+                        resArr.push(res);
                         if (fin == total) {
                             if (onComplete) {
-                                onComplete();
+                                onComplete(resArr);
                             }
-                            resolve();
+                            resolve(resArr);
                         }
                     });
-                }
-                else {//以下是早前用于批量加载序列帧动画纹理的业务逻辑, 由于需求的数据格式无法通过工具asserExport.py实现(需要手动添加编辑, 但是每次运行asserExport.py就会被覆盖)  现已废弃 也可以保留
-                    if (object.urlPrefix) {
-                        //例如 testList: { urlPrefix: "aa/bb/cc", variableLength: 3, start:1, end:215, suffix:"_game_png", type: SpriteFrame }, 将加载 "aa/bb/cc001_game_png" 到 "aa/bb/cc215_game_png" 的资源
-                        if (object.start > object.end) {
-                            console.info("资源包<" + name + "> " + object.urlPrefix + " 出现序列资源问题, start数值" + object.start + " 大于end数值" + object.end);
-                            return;
-                        }
-                        for (let j: number = object.start; j <= object.end; j++) {
-
-                            let str = j.toString();
-                            while (str.length < object.variableLength) {//仅在当前序列数值长度小于指定变量长度时, 才在序列数值前面补0;  如果指定长度是0 或 1, 而当前序列数值是 10(长度为2), 则不做处理(自适像 xxx_1.png<注意不是xxx_001.png> 到 xxx_9999.png 这类不固定后缀变量长度的序列)
-                                str = 0 + str;
-                            }
-                            if (!object.type) {
-                                object.type = SpriteFrame;
-                            }
-                            if (!object.suffix) {
-                                object.suffix = "";
-                            }
-                            //if (!object.suffix)
-                            let url = object.urlPrefix + str + object.suffix;
-                            if (url[url.length - 1] == "/") {
-                                url = url.substring(0, url.length - 1);
-                            }
-
-                            if (object.type && object.type.prototype && object.type.prototype.constructor) {//自动对应类型 补齐图片资源的后缀路径
-                                if (object.type == SpriteFrame) {
-                                    let arr = url.split("/");
-                                    if (arr[arr.length - 1] !== "spriteFrame") {
-                                        url += "/spriteFrame";
-                                    }
-                                }
-                                else if (object.type == Texture2D) {
-                                    let arr = url.split("/");
-                                    if (arr[arr.length - 1] !== "texture") {
-                                        url += "/texture";
-                                    }
-                                }
-                            }
-
-                            let _res = _bundle.get(url, object.type);
-                            if (_res && !_res.isValid) {//此资源存在于缓存中, 但是已经被销毁不可重用
-                                assetManager.releaseAsset(_res);//解除依赖关系 并从缓存字典中移除
-                                assetManager.assets.remove(_res.uuid);
-                            }
-                            _bundle.load(url, object.type, (err, res) => {
-                                if (err != undefined) {
-                                    console.info("资源包<" + name + "> 加载 {url:\"" + url + "\"" + ", type:\"" + object.type.prototype["__classname__"] + "\"} 失败!");//检查路径和类型
-                                }
-                                fin++;
-                                if (onProgress) {
-                                    onProgress(fin, total, url);
-                                }
-                                if (fin == total) {
-                                    if (onComplete) {
-                                        onComplete();
-                                    }
-                                    resolve();
-                                }
-
-                            });
-                        }
-                    }
                 }
             }
         })
@@ -466,13 +419,13 @@ class AsyncAsset {
     /**
      *  把assetManager.loadAny转为异步队列 函数 可以通过 await实现
      */
-
-
-    public static async loadAny<T extends Asset>(requests: string, typeOrOnComplete?: new (...args) => T | ((res) => void), onComplete?: (res) => void): Promise<T> {
+    public static async loadAny<T extends Asset>(requests: string, typeOrOnComplete?: (res) => void): Promise<T>;
+    public static async loadAny<T extends Asset>(requests: string, typeOrOnComplete?: (new (...args) => T) , onComplete?: (res) => void): Promise<T>;
+    public static async loadAny<T extends Asset>(requests: string, typeOrOnComplete?: (new (...args) => T) | ((res) => void), onComplete?: (res) => void): Promise<T> {
         /* let type: new (...args) => T;
         let onComplete: (res) => void; */
         if (typeOrOnComplete) {
-            if (Object.getPrototypeOf(typeOrOnComplete) == Asset) {
+            if (Object.getPrototypeOf(typeOrOnComplete) == Asset) {//typeOrOnComplete是类型参数
                 return new Promise<T>(resolve => {
                     assetManager.loadAny(requests, typeOrOnComplete, (err, res: T) => {
                         if (!err) {
@@ -503,7 +456,7 @@ class AsyncAsset {
                 })
             }
             else {
-                let _typeOrOnComplete: any = typeOrOnComplete;
+                let _typeOrOnComplete: any = typeOrOnComplete;//typeOrOnComplete是成功回调
                 return new Promise<T>(resolve => {
                     assetManager.loadAny(requests, (err, res: T) => {
                         if (!err) {
@@ -562,7 +515,7 @@ class AsyncAsset {
     }
 }
 export const asyncAsset = AsyncAsset;
-window["asyncAsset"] = asyncAsset;
+globalThis["asyncAsset"] = asyncAsset;
 
 AssetManager.Bundle.prototype["getUsingAsset"] = function <T extends Asset>(usingAsset: { url: string, type: new (...parmas) => T }): T {
     return this.get(usingAsset.url, usingAsset.type);

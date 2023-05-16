@@ -249,10 +249,7 @@ class EngineOverrider {
 
         //检测Node之下有没有这个Component, 有的话直接返回Component的引用; 没有的话自动新增Component实例再返回其引用
         Node.prototype.getOrAddComponent = function <T extends Component>(componentType: new (...parmas) => T, ...args): T {
-            if (!this.getComponent(componentType)) {
-                return this.addComponent.call(this, componentType, ...args);
-            }
-            return this.getComponent(componentType);
+            return this.getComponent.call(this, componentType) || this.addComponent.call(this, componentType, ...args);
         }
 
         let spriteFrame_setFunc = getSetter(Sprite, "spriteFrame");//获取 Sprite 定义的 set spriteFrame()
