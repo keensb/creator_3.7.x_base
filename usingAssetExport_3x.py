@@ -57,76 +57,105 @@ breakLoop = False
 def loadingShow():
     global breakLoop
     if breakLoop == True:
+        sys.stdout.write("\rDone                                                    ")
+        sys.stdout.flush()
+        sys.stdout.write("\rDone")
+        sys.stdout.flush()
         return
-    sys.stdout.write('\r'+"进程没卡住,只是文件有点多    -")#单行输出   平时用的换行输出 print 其实就等于 sys.stdout.write(内容+'\n')
-    sys.stdout.flush()#结束字符串缓冲,即时显示文字内容 没有这一行可能会出现类似 跳帧 的不连贯状况
-    time.sleep(0.08)#进程休眠间隔
-    sys.stdout.write('\r'+"进程没卡住,只是文件有点多    \\")
-    sys.stdout.flush()
-    time.sleep(0.08)
-    sys.stdout.write('\r'+"进程没卡住,只是文件有点多    |")
-    sys.stdout.flush()
-    time.sleep(0.08)
-    sys.stdout.write('\r'+"进程没卡住,只是文件有点多    /")
-    sys.stdout.flush()
-    time.sleep(0.08)
+    else:
+        sys.stdout.write('\r'+"不用担心, 进程没卡住, 只是待处理的文件比较多    -")#单行输出   平时用的换行输出 print 其实就等于 sys.stdout.write(内容+'\n')
+        sys.stdout.flush()#结束字符串缓冲,即时显示文字内容 没有这一行可能会出现类似 跳帧 的不连贯状况
+        time.sleep(0.08)#进程休眠间隔
+        sys.stdout.write('\r'+"不用担心, 进程没卡住, 只是待处理的文件比较多    \\")
+        sys.stdout.flush()
+        time.sleep(0.08)
+        sys.stdout.write('\r'+"不用担心, 进程没卡住, 只是待处理的文件比较多    |")
+        sys.stdout.flush()
+        time.sleep(0.08)
+        sys.stdout.write('\r'+"不用担心, 进程没卡住, 只是待处理的文件比较多    /")
+        sys.stdout.flush()
+        time.sleep(0.08)
 
     if breakLoop == True:
+        sys.stdout.write("\rDone                                                    ")
+        sys.stdout.flush()
+        sys.stdout.write("\rDone")
+        sys.stdout.flush()
         return
-
-    sys.stdout.write('\r'+"进程没卡住,只是文件有点多.   -")
-    sys.stdout.flush()
-    time.sleep(0.08)
-    sys.stdout.write('\r'+"进程没卡住,只是文件有点多.   \\")
-    sys.stdout.flush()
-    time.sleep(0.08)
-    sys.stdout.write('\r'+"进程没卡住,只是文件有点多.   |")
-    sys.stdout.flush()
-    time.sleep(0.08)
-    sys.stdout.write('\r'+"进程没卡住,只是文件有点多.   /")
-    sys.stdout.flush()
-    time.sleep(0.08)
+    else:
+        sys.stdout.write('\r'+"不用担心, 进程没卡住, 只是待处理的文件比较多.   -")
+        sys.stdout.flush()
+        time.sleep(0.08)
+        sys.stdout.write('\r'+"不用担心, 进程没卡住, 只是待处理的文件比较多.   \\")
+        sys.stdout.flush()
+        time.sleep(0.08)
+        sys.stdout.write('\r'+"不用担心, 进程没卡住, 只是待处理的文件比较多.   |")
+        sys.stdout.flush()
+        time.sleep(0.08)
+        sys.stdout.write('\r'+"不用担心, 进程没卡住, 只是待处理的文件比较多.   /")
+        sys.stdout.flush()
+        time.sleep(0.08)
 
     if breakLoop == True:
+        sys.stdout.write("\rDone                                                    ")
+        sys.stdout.flush()
+        sys.stdout.write("\rDone")
+        sys.stdout.flush()
         return
-
-    sys.stdout.write('\r'+"进程没卡住,只是文件有点多..  -")
-    sys.stdout.flush()
-    time.sleep(0.08)
-    sys.stdout.write('\r'+"进程没卡住,只是文件有点多..  \\")
-    sys.stdout.flush()
-    time.sleep(0.08)
-    sys.stdout.write('\r'+"进程没卡住,只是文件有点多..  |")
-    sys.stdout.flush()
-    time.sleep(0.08)
-    sys.stdout.write('\r'+"进程没卡住,只是文件有点多..  /")
-    sys.stdout.flush()
-    time.sleep(0.08)
+    else:
+        sys.stdout.write('\r'+"不用担心, 进程没卡住, 只是待处理的文件比较多..  -")
+        sys.stdout.flush()
+        time.sleep(0.08)
+        sys.stdout.write('\r'+"不用担心, 进程没卡住, 只是待处理的文件比较多..  \\")
+        sys.stdout.flush()
+        time.sleep(0.08)
+        sys.stdout.write('\r'+"不用担心, 进程没卡住, 只是待处理的文件比较多..  |")
+        sys.stdout.flush()
+        time.sleep(0.08)
+        sys.stdout.write('\r'+"不用担心, 进程没卡住, 只是待处理的文件比较多..  /")
+        sys.stdout.flush()
+        time.sleep(0.08)
 
     if breakLoop == True:
+        sys.stdout.write("\rDone                                                    ")
+        sys.stdout.flush()
+        sys.stdout.write("\rDone")
+        sys.stdout.flush()
         return
+    else:
+        sys.stdout.write('\r'+"不用担心, 进程没卡住, 只是待处理的文件比较多... -")
+        sys.stdout.flush()
+        time.sleep(0.08)
+        sys.stdout.write('\r'+"不用担心, 进程没卡住, 只是待处理的文件比较多... \\")
+        sys.stdout.flush()
+        time.sleep(0.08)
+        sys.stdout.write('\r'+"不用担心, 进程没卡住, 只是待处理的文件比较多... |")
+        sys.stdout.flush()
+        time.sleep(0.08)
+        sys.stdout.write('\r'+"不用担心, 进程没卡住, 只是待处理的文件比较多... /")
+        sys.stdout.flush()
+        time.sleep(0.08)
+    if breakLoop == True:
+        sys.stdout.write("\rDone                                                    ")
+        sys.stdout.flush()
+        sys.stdout.write("\rDone")
+        sys.stdout.flush()
+        return
+    else:
+        loadingShow()
 
-    sys.stdout.write('\r'+"进程没卡住,只是文件有点多... -")
-    sys.stdout.flush()
-    time.sleep(0.08)
-    sys.stdout.write('\r'+"进程没卡住,只是文件有点多... \\")
-    sys.stdout.flush()
-    time.sleep(0.08)
-    sys.stdout.write('\r'+"进程没卡住,只是文件有点多... |")
-    sys.stdout.flush()
-    time.sleep(0.08)
-    sys.stdout.write('\r'+"进程没卡住,只是文件有点多... /")
-    sys.stdout.flush()
-    time.sleep(0.08)
-    loadingShow()
+
+
+print("")
+
 
 
 tList = []
-""" ll = Thread(target=loadingShow, args=[], name=f"线程{0}:")
-ll.daemon = True
-ll.start()
-tList.append(ll)
-print("eeeeeeeeeeee") """
+
+runingT = Thread(target=loadingShow, args=[], name=f"线程{0}:")
+runingT.daemon = True
+runingT.start()
+
 
 def findBundleInDir(dirPath):
     list = os.listdir(dirPath)  # 列出文件夹下所有的目录与文件
@@ -191,6 +220,8 @@ if not os.path.exists("./assets/script/config"):
     os.makedirs("./assets/script/config")
 
 
+
+
 info = ""
 hanldedPathList = []
 dataObj = {}
@@ -213,10 +244,7 @@ def mainMethod(tName):
             _pathArr = valueArr[i].split(".")
             _pathArr.pop()
             _path = ".".join(_pathArr)
-            if _path in hanldedPathList:
-                continue
-            else:
-                hanldedPathList.append(_path) 
+            
             
             # 把 ???@2x.png 这类图片资源名称改为 ???_a2x.png
             tempName = fileName.replace("@", "_a")
@@ -225,7 +253,10 @@ def mainMethod(tName):
             
             #fileName = tempName + "_" + file_extension # 以文件名作为key(适合中小型项目, 大项目中可能会出现多个重名的key 发生重名时会自动添加后缀 "$<增量>")
             fileName = _path + "_" + file_extension # 以文件路径作为key(大项目中避免出现多个重名的key)
-
+            if fileName in hanldedPathList:
+                continue
+            else:
+                hanldedPathList.append(fileName) 
             n = 1
             pattern = r'[a-zA-Z]|_'
             pattern2 = re.compile(r'[^0-9a-zA-Z]')
@@ -253,7 +284,6 @@ def mainMethod(tName):
                     read1 = file1.read()
                     jsonData1 = json.loads(read1)
                     uuid = jsonData1["uuid"]
-            
             if file_extension == "anim":  # 动画剪辑
                 assetType = "AnimationClip"
             elif file_extension == "labelatlas":  # 艺术字
@@ -307,7 +337,7 @@ def mainMethod(tName):
             # 缺点是容易出现同名的 key 所以发生重复时自动在key后面加个 "$<增量>" 作为后缀以便区分  例如 bg_jpg$1: { bundle: "res", url: "sub1/bg", ext: ".jpg", type: SpriteFrame, uuid: "2abbf3c3-f370-4628-bf7e-5309b079dd06" },   bg_jpg$2: { bundle: "res", url: "sub2/bg", ext: ".jpg", type: SpriteFrame, uuid: "343708b9-308b-4def-8b66-680b41b23b48" }
             newStr = fileName + ": { bundle: \"" + key + "\", url: \"" + fileURLArr[
                 0] + "\", ext: \"." + file_extension + "\", type: " + assetType + (", uuid: \"" + uuid + "\" }" if uuid != "" else " }")
-            #print(newStr)
+            # print(newStr) # 显示详细信息
 
             if (key in dataObj) == False:
                 dataObj[key] = {}
@@ -324,7 +354,7 @@ def mainMethod(tName):
 
 
 #目前测试结果 导出36828个文件配置耗时152.514648秒
-for i in range(9):
+for i in range(8):
     t = Thread(target=mainMethod, args=[f"线程{i + 1}:"], name=f"线程{i + 1}:")
     t.daemon = True
     t.start()
@@ -336,7 +366,7 @@ for i in range(len(tList)):
 
 
 
-print("资源总数",len(hanldedPathList))
+
 
 
 
@@ -358,11 +388,11 @@ with open("./assets/script/config/usingAssets.ts", "w+", encoding="utf-8") as fi
         ###############################################################
         subCount = len(dataObj[key])
         for sub in dataObj[key]:
-             
             subData = dataObj[key][sub]
             #subDataStr = json.dumps(subData)
-            subDataStr = "\t\t" + sub + ": " + "{ bundle: \"" + subData["bundle"] + "\", url: \"" + subData["url"] + "\", ext: \"." + subData["ext"] + "\", type: " + subData["type"] + (", uuid: \"" + subData["uuid"] + "\" }" if ("uuid" in subData and subData["uuid"] != "") else " }")
-            
+            content = sub + ": " + "{ bundle: \"" + subData["bundle"] + "\", url: \"" + subData["url"] + "\", ext: \"." + subData["ext"] + "\", type: " + subData["type"] + (", uuid: \"" + subData["uuid"] + "\" }" if ("uuid" in subData and subData["uuid"] != "") else " }")
+            subDataStr = "\t\t" + content
+            print(content)
             file.write(subDataStr)
             file.write(",\n" if subCount > 0 else "\n")
         ###############################################################
@@ -383,8 +413,8 @@ with open("./assets/script/config/usingAssets.ts", "w+", encoding="utf-8") as fi
         "globalThis[\"usingBundles\"] = usingBundles;")
 
 pass_time = time.time() - start_time
+zs = len(hanldedPathList)
 
+print("\n\n=============================================导出配置完成 资源总数: " + str(zs) + "   耗时(秒): " +  str(pass_time) + "=============================================")
 breakLoop = True
-
-print("\n\n=============================================导出配置完成 耗时(秒): " +  str(pass_time) + "=============================================")
 input("")
