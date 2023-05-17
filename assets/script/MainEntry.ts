@@ -35,7 +35,7 @@ export class MainEntry extends Component {
         this.btn3.node.on(NodeEventType.TOUCH_END, this.useAsset, this);
         this.btn4.node.on(NodeEventType.TOUCH_END, this.destroyAsset, this);
 
-
+        
 
         window["uid"] = this.sfUUID;
         window["f1"] = this.faceSp;
@@ -163,6 +163,7 @@ export class MainEntry extends Component {
             this.currentSF.forceDestroy();
         }
 
+        usingAssets.atlas['/girlTextures/girlTexture0.png']
     }
 
     update(deltaTime: number) {

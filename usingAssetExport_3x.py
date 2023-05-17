@@ -38,14 +38,95 @@ os.path.supports_unicode_filenames  #设置是否支持unicode路径名
 
 # list = os.listdir(rootdir)  # 列出文件夹下所有的目录与文件
 
+
+
 import os
 import re
 import json
 import sys
+from threading import Thread
+import time
 sys.path.append('./pythonModule/')
 from compressedUuid import compresse
 bundleNames = []
 
+start_time = time.time()
+
+breakLoop = False
+
+def loadingShow():
+    global breakLoop
+    if breakLoop == True:
+        return
+    sys.stdout.write('\r'+"进程没卡住,只是文件有点多    -")#单行输出   平时用的换行输出 print 其实就等于 sys.stdout.write(内容+'\n')
+    sys.stdout.flush()#结束字符串缓冲,即时显示文字内容 没有这一行可能会出现类似 跳帧 的不连贯状况
+    time.sleep(0.08)#进程休眠间隔
+    sys.stdout.write('\r'+"进程没卡住,只是文件有点多    \\")
+    sys.stdout.flush()
+    time.sleep(0.08)
+    sys.stdout.write('\r'+"进程没卡住,只是文件有点多    |")
+    sys.stdout.flush()
+    time.sleep(0.08)
+    sys.stdout.write('\r'+"进程没卡住,只是文件有点多    /")
+    sys.stdout.flush()
+    time.sleep(0.08)
+
+    if breakLoop == True:
+        return
+
+    sys.stdout.write('\r'+"进程没卡住,只是文件有点多.   -")
+    sys.stdout.flush()
+    time.sleep(0.08)
+    sys.stdout.write('\r'+"进程没卡住,只是文件有点多.   \\")
+    sys.stdout.flush()
+    time.sleep(0.08)
+    sys.stdout.write('\r'+"进程没卡住,只是文件有点多.   |")
+    sys.stdout.flush()
+    time.sleep(0.08)
+    sys.stdout.write('\r'+"进程没卡住,只是文件有点多.   /")
+    sys.stdout.flush()
+    time.sleep(0.08)
+
+    if breakLoop == True:
+        return
+
+    sys.stdout.write('\r'+"进程没卡住,只是文件有点多..  -")
+    sys.stdout.flush()
+    time.sleep(0.08)
+    sys.stdout.write('\r'+"进程没卡住,只是文件有点多..  \\")
+    sys.stdout.flush()
+    time.sleep(0.08)
+    sys.stdout.write('\r'+"进程没卡住,只是文件有点多..  |")
+    sys.stdout.flush()
+    time.sleep(0.08)
+    sys.stdout.write('\r'+"进程没卡住,只是文件有点多..  /")
+    sys.stdout.flush()
+    time.sleep(0.08)
+
+    if breakLoop == True:
+        return
+
+    sys.stdout.write('\r'+"进程没卡住,只是文件有点多... -")
+    sys.stdout.flush()
+    time.sleep(0.08)
+    sys.stdout.write('\r'+"进程没卡住,只是文件有点多... \\")
+    sys.stdout.flush()
+    time.sleep(0.08)
+    sys.stdout.write('\r'+"进程没卡住,只是文件有点多... |")
+    sys.stdout.flush()
+    time.sleep(0.08)
+    sys.stdout.write('\r'+"进程没卡住,只是文件有点多... /")
+    sys.stdout.flush()
+    time.sleep(0.08)
+    loadingShow()
+
+
+tList = []
+""" ll = Thread(target=loadingShow, args=[], name=f"线程{0}:")
+ll.daemon = True
+ll.start()
+tList.append(ll)
+print("eeeeeeeeeeee") """
 
 def findBundleInDir(dirPath):
     list = os.listdir(dirPath)  # 列出文件夹下所有的目录与文件
@@ -64,16 +145,19 @@ def findBundleInDir(dirPath):
                 if "userData" in jsonData:
                     if "isBundle" in jsonData["userData"] and jsonData["userData"]["isBundle"] == True:
                         if "bundleName" in jsonData["userData"]:
-                            bundleNames.append([jsonData["userData"]["bundleName"], path.split(".meta")[0]])
+                            bundleNames.append(
+                                [jsonData["userData"]["bundleName"], path.split(".meta")[0]])
                         else:
                             bundleNames.append([os.path.basename(path).split(".")[
                                                 0], path.split(".meta")[0]])
 
-findBundleInDir("./assets")
 
+
+findBundleInDir("./assets")
 fileArray = {}
 filePathArray = {}
 fileCount = 0
+
 
 def findAssetInDir(bundleName, bundlePath, dirPath):
     list = os.listdir(dirPath)  # 列出文件夹下所有的目录与文件
@@ -90,11 +174,11 @@ def findAssetInDir(bundleName, bundlePath, dirPath):
                     filePathArray[bundleName] = []
                     global fileCount
                     fileCount += 1
-                    
+
                 fileArray[bundleName].append(path.split(bundlePath+"/")[1])
                 filePathArray[bundleName].append(path)
-                #if bundleName == "resources":
-                    #print(path.split(bundlePath+"/")[1])
+                # if bundleName == "resources":
+                # print(path.split(bundlePath+"/")[1])
         elif os.path.isdir(path):  # 这个是文件夹 继续递归向下遍历
             findAssetInDir(bundleName, bundlePath, path)
 
@@ -106,29 +190,41 @@ for i in range(0, len(bundleNames)):
 if not os.path.exists("./assets/script/config"):
     os.makedirs("./assets/script/config")
 
-with open("./assets/script/config/usingAssets.ts", "w+", encoding="utf-8") as file:
-    file.write("/** created by usingAssetExport_3x.py */"+"\n//asset目录下所有被设置为'Bundle'的文件夹, 里面资源都会被注册进来\n")
-    file.write(
-        'import { AnimationClip, LabelAtlas, Font, SpriteAtlas, SpriteFrame, Prefab, VideoClip, AudioClip, sp, dragonBones, JsonAsset, TextAsset, Asset } from "cc";'+'\n\n')
-    
-    file.write("/*\n目前3.6版本发现的规律\n\t所有资源加载后储存在字典 assetManager.assets 里面, 每个资源生成一个对应的AssetInfo, AssetInfo的uuid就是该资源的key;  使用 bundle.get(path, type) 将尝试匹配对应的AssetInfo, 然后通过它的uuid在assetManager.assets里查找资源\n\tbundle.load('图片相对路径', SpriteFrame) 或 bundle.load('图片相对路径', Texture2D)  只能获得 ImageAsset, 类型参数 SpriteFrame 根本没用(这个在官方文档有说明)\n\tbundle.load('图片相对路径' + '/spriteFrame')  将获得 SpriteFrame, 不需要类型参数 SpriteFrame\n\tbundle.load('图片相对路径' + '/texture')  将获得 Texture2D, 不需要类型参数 Texture2D\n\tassetManager.loadAny(图片uuid + '@6c48a')  将在回调方法里获得 Texture2D   (或者使用更暴力的方式同步获取 assetManager.assets._map[图片uuid + '@6c48a'])\n\tassetManager.loadAny(图片uuid + '@f9941')  将在回调方法里获得 SpriteFrame   (或者使用更暴力的方式同步获取 assetManager.assets._map[图片uuid + '@f9941'])\n\ttexturePack打包图集, 配置文件与png文件去掉后缀名之后路径相同, 因此使用 bundle.load 加载时必须声明 SpriteAtlas, 否则加载的就是 ImageAsset\n\tspine动画 json配置文件与png文件去掉后缀路径相同, 因此加载时必须声明 sp.SkeletonData, 否则加载的就是 ImageAsset   龙骨动画则不用(因为json与png去掉后缀 路径也不同名)\n*/\n\n")
-    file.write("export const usingAssets = {"+"\n")
+
+info = ""
+hanldedPathList = []
+dataObj = {}
+def mainMethod(tName):
+    global fileArray
+    global dataObj
+    global fileCount
+
     for key in fileArray:
+        
         fileCount -= 1
-        file.write("\t" + key + ": {\n")
-        # file.write("\t\t"+ "id: \"" + key + "\",\n")
+        
         valueArr = fileArray[key]
         filePathArr = filePathArray[key]
         fileNameArray = []
         _len = len(valueArr)
         for i in range(0, _len):
+           
             fileName = os.path.basename(valueArr[i])
+            _pathArr = valueArr[i].split(".")
+            _pathArr.pop()
+            _path = ".".join(_pathArr)
+            if _path in hanldedPathList:
+                continue
+            else:
+                hanldedPathList.append(_path) 
+            
             # 把 ???@2x.png 这类图片资源名称改为 ???_a2x.png
             tempName = fileName.replace("@", "_a")
             file_extension = fileName.split(".")[-1:][0].lower()
             tempName = ".".join(tempName.split('.')[:-1])
-
-            fileName = tempName + "_" + file_extension
+            
+            #fileName = tempName + "_" + file_extension # 以文件名作为key(适合中小型项目, 大项目中可能会出现多个重名的key 发生重名时会自动添加后缀 "$<增量>")
+            fileName = _path + "_" + file_extension # 以文件路径作为key(大项目中避免出现多个重名的key)
 
             n = 1
             pattern = r'[a-zA-Z]|_'
@@ -151,11 +247,13 @@ with open("./assets/script/config/usingAssets.ts", "w+", encoding="utf-8") as fi
             assetType = "Asset"
             uuid = ""
             jsonData1 = {}
+            
             if os.path.exists(filePathArr[i] + ".meta"):
                 with open(filePathArr[i] + ".meta", "r", encoding="utf-8") as file1:
                     read1 = file1.read()
                     jsonData1 = json.loads(read1)
                     uuid = jsonData1["uuid"]
+            
             if file_extension == "anim":  # 动画剪辑
                 assetType = "AnimationClip"
             elif file_extension == "labelatlas":  # 艺术字
@@ -196,16 +294,25 @@ with open("./assets/script/config/usingAssets.ts", "w+", encoding="utf-8") as fi
             elif file_extension == "txt":
                 assetType = "TextAsset"
             fileURLArr = valueArr[i].split("." + file_extension)
-
+            
+            '''
             ########################################
-            # 使用压缩uuid (试验中) 如果不能正常使用 就注释掉这一段
+            # 使用压缩uuid (试验中) 如果不能正常使用 就注释掉这一段   (输出配置文件 压缩uuid的耗时是不压缩的3~4倍 如果有上万个文件就很更加明显了  但是压缩uuid后输出的文件 体积会略微小一点)
             if uuid != "":
                 uuid = compresse(uuid)
             ########################################
-            #使用 "文件名_文件格式" 做key  例如  bg_jpg: { bundle: "res", url: "bg", ext: ".jpg", type: SpriteFrame, uuid: "2b14f3a8-b889-4ee4-8e8c-4ac66d19e4c0" }
-            #缺点是容易出现同名的 key 所以发生重复时自动在key后面加个 "$<增量>" 作为后缀以便区分  例如 bg_jpg$1: { bundle: "res", url: "sub1/bg", ext: ".jpg", type: SpriteFrame, uuid: "2abbf3c3-f370-4628-bf7e-5309b079dd06" },   bg_jpg$2: { bundle: "res", url: "sub2/bg", ext: ".jpg", type: SpriteFrame, uuid: "343708b9-308b-4def-8b66-680b41b23b48" }
-            info = fileName + ": { bundle: \"" + key + "\", url: \"" + fileURLArr[
+            '''
+            
+            # 使用 "文件名_文件格式" 做key  例如  bg_jpg: { bundle: "res", url: "bg", ext: ".jpg", type: SpriteFrame, uuid: "2b14f3a8-b889-4ee4-8e8c-4ac66d19e4c0" }
+            # 缺点是容易出现同名的 key 所以发生重复时自动在key后面加个 "$<增量>" 作为后缀以便区分  例如 bg_jpg$1: { bundle: "res", url: "sub1/bg", ext: ".jpg", type: SpriteFrame, uuid: "2abbf3c3-f370-4628-bf7e-5309b079dd06" },   bg_jpg$2: { bundle: "res", url: "sub2/bg", ext: ".jpg", type: SpriteFrame, uuid: "343708b9-308b-4def-8b66-680b41b23b48" }
+            newStr = fileName + ": { bundle: \"" + key + "\", url: \"" + fileURLArr[
                 0] + "\", ext: \"." + file_extension + "\", type: " + assetType + (", uuid: \"" + uuid + "\" }" if uuid != "" else " }")
+            #print(newStr)
+
+            if (key in dataObj) == False:
+                dataObj[key] = {}
+            dataObj[key][fileName] = {'bundle':  key , 'url':  fileURLArr[0], 'ext': file_extension, 'type':assetType, 'uuid':uuid}
+
            
             '''
             #使用bundle下的文件路径做 key 避免重复, 使用的时候也可以更加确定目标  例如  "sub1/bg.jpg": { bundle: "res", url: "sub1/bg", ext: ".jpg", type: SpriteFrame, uuid: "2abbf3c3-f370-4628-bf7e-5309b079dd06" },  "sub2/bg.jpg": { bundle: "res", url: "sub2/bg", ext: ".jpg", type: SpriteFrame, uuid: "343708b9-308b-4def-8b66-680b41b23b48" }
@@ -214,13 +321,57 @@ with open("./assets/script/config/usingAssets.ts", "w+", encoding="utf-8") as fi
             info = "\"" + fileURLArr[0] + "." + file_extension + "\": { bundle: \"" + key + "\", url: \"" + fileURLArr[
                 0] + "\", ext: \"." + file_extension + "\", type: " + assetType + (", uuid: \"" + uuid + "\" }" if uuid != "" else " }")
             '''
-            print(info)
-            if i < _len - 1:
-                info = info + ","
-            # value[i].split(file_extension)[0]
-            file.write("\t\t" + info + "\n")
-        file.write("\t},\n" if fileCount > 0 else "\t}\n")
-    file.write("}\n")
+
+
+#目前测试结果 导出36828个文件配置耗时152.514648秒
+for i in range(9):
+    t = Thread(target=mainMethod, args=[f"线程{i + 1}:"], name=f"线程{i + 1}:")
+    t.daemon = True
+    t.start()
+    tList.append(t)
+
+
+for i in range(len(tList)):
+    tList[i].join()
+
+
+
+print("资源总数",len(hanldedPathList))
+
+
+
+
+with open("./assets/script/config/usingAssets.ts", "w+", encoding="utf-8") as file:
+    file.write("/** created by usingAssetExport_3x.py */" +
+               "\n//asset目录下所有被设置为'Bundle'的文件夹, 里面资源都会被注册进来\n")
+    file.write(
+        'import { AnimationClip, LabelAtlas, Font, SpriteAtlas, SpriteFrame, Prefab, VideoClip, AudioClip, sp, dragonBones, JsonAsset, TextAsset, Asset } from "cc";'+'\n\n')
+    file.write(
+        "/*\n目前3.6版本发现的规律\n\t所有资源加载后储存在字典 assetManager.assets 里面, 每个资源生成一个对应的AssetInfo, AssetInfo的uuid就是该资源的key;  使用 bundle.get(path, type) 将尝试匹配对应的AssetInfo, 然后通过它的uuid在assetManager.assets里查找资源\n\tbundle.load('图片相对路径', SpriteFrame) 或 bundle.load('图片相对路径', Texture2D)  只能获得 ImageAsset, 类型参数 SpriteFrame 根本没用(这个在官方文档有说明)\n\tbundle.load('图片相对路径' + '/spriteFrame')  将获得 SpriteFrame, 不需要类型参数 SpriteFrame\n\tbundle.load('图片相对路径' + '/texture')  将获得 Texture2D, 不需要类型参数 Texture2D\n\tassetManager.loadAny(图片uuid + '@6c48a')  将在回调方法里获得 Texture2D   (或者使用更暴力的方式同步获取 assetManager.assets._map[图片uuid + '@6c48a'])\n\tassetManager.loadAny(图片uuid + '@f9941')  将在回调方法里获得 SpriteFrame   (或者使用更暴力的方式同步获取 assetManager.assets._map[图片uuid + '@f9941'])\n\ttexturePack打包图集, 配置文件与png文件去掉后缀名之后路径相同, 因此使用 bundle.load 加载时必须声明 SpriteAtlas, 否则加载的就是 ImageAsset\n\tspine动画 json配置文件与png文件去掉后缀路径相同, 因此加载时必须声明 sp.SkeletonData, 否则加载的就是 ImageAsset   龙骨动画则不用(因为json与png去掉后缀 路径也不同名)\n*/\n\n")
+    file.write("export const usingAssets = {\n")
+
+    ###############################################################
+    keyCount = len(dataObj)
+    for key in dataObj:
+        keyCount -= 1
+        file.write("\t" + key + ": {\n")
+        ###############################################################
+        subCount = len(dataObj[key])
+        for sub in dataObj[key]:
+             
+            subData = dataObj[key][sub]
+            #subDataStr = json.dumps(subData)
+            subDataStr = "\t\t" + sub + ": " + "{ bundle: \"" + subData["bundle"] + "\", url: \"" + subData["url"] + "\", ext: \"." + subData["ext"] + "\", type: " + subData["type"] + (", uuid: \"" + subData["uuid"] + "\" }" if ("uuid" in subData and subData["uuid"] != "") else " }")
+            
+            file.write(subDataStr)
+            file.write(",\n" if subCount > 0 else "\n")
+        ###############################################################
+        file.write("\t},\n" if keyCount > 0 else "\t}\n")
+    
+    ###############################################################
+
+    
+    file.write("}\n\n")
     file.write(
         "globalThis[\"usingAssets\"] = usingAssets;\n")
 
@@ -230,8 +381,10 @@ with open("./assets/script/config/usingAssets.ts", "w+", encoding="utf-8") as fi
     file.write("\n}\n")
     file.write(
         "globalThis[\"usingBundles\"] = usingBundles;")
-    
 
+pass_time = time.time() - start_time
 
-print("\n\n=============================================导出配置完成=============================================")
+breakLoop = True
+
+print("\n\n=============================================导出配置完成 耗时(秒): " +  str(pass_time) + "=============================================")
 input("")
