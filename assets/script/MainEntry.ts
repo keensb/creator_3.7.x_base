@@ -41,7 +41,7 @@ export class MainEntry extends Component {
         window["f1"] = this.faceSp;
         window["f2"] = this.faceSp2;
 
-        window["f1"].asyncSpriteFrame = 'http://172.16.70.38:5050/public/title.jpg';//"https://baishancdn.hicnhm.com/beiji_res/assets/avatar3/300000010_1_1.png";
+        window["f1"].asyncSpriteFrame = "https://baishancdn.hicnhm.com/beiji_res/assets/avatar3/300000010_1_1.png";
 
 
         window["ClassDictionary"] = ClassDictionary;
@@ -54,7 +54,7 @@ export class MainEntry extends Component {
         let listObj: { [key: string]: SpriteAtlas } = {};
         let count = 0;
         for (let i = 0; i < 9; i++) {
-            assetManager.loadAny(usingAssets.atlas["girlTexture" + i + "_plist"].uuid, null, (err, res: SpriteAtlas) => {
+            assetManager.loadAny(usingAssets.atlas["girlTextures_girlTexture" + i + "_plist"].uuid, null, (err, res: SpriteAtlas) => {
                 listObj[i] = res;
                 console.log("iiiiiiiiiiiii", i, listObj[i]);
               
