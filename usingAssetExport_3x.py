@@ -232,7 +232,7 @@ if not os.path.exists("./assets/script/config"):
     os.makedirs("./assets/script/config")
 
 
-
+print("\n\n")
 
 info = ""
 hanldedPathList = []
@@ -366,6 +366,7 @@ def mainMethod(tName):
 
 
 #目前测试结果 8个子线程 导出36828个文件配置耗时125秒
+#目前测试结果 1个子线程 导出36828个文件配置耗时63秒
 for i in range(1):
     t = Thread(target=mainMethod, args=[f"线程{i + 1}:"], name=f"线程{i + 1}:")
     t.daemon = True
