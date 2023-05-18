@@ -246,16 +246,14 @@ def mainMethod(tName):
     for key in fileArray:
         
         fileCount -= 1
-        
         valueArr = fileArray[key]
         filePathArr = filePathArray[key]
         fileNameArray = []
         _len = len(valueArr)
         for i in range(0, _len):
             fileName = os.path.basename(valueArr[i])
-            _pathArr = valueArr[i].split(".")
-            _pathArr.pop()
-            _path = ".".join(_pathArr)
+            _path = os.path.splitext(valueArr[i])[0]
+            
             
             
             # 把 ???@2x.png 这类图片资源名称改为 ???_a2x.png
