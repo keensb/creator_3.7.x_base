@@ -63,36 +63,16 @@ def loadingShow():
         sys.stdout.flush()
         return
     else:
-        sys.stdout.write('\r'+"不用担心, 进程没卡住, 只是待处理的文件比较多    -")#单行输出   平时用的换行输出 print 其实就等于 sys.stdout.write(内容+'\n')
+        sys.stdout.write('\r'+"不用担心, 进程并没有卡死, 只是待处理的文件比较多    -")#单行输出   平时用的换行输出 print 其实就等于 sys.stdout.write(内容+'\n')
         sys.stdout.flush()#结束字符串缓冲,即时显示文字内容 没有这一行可能会出现类似 跳帧 的不连贯状况
         time.sleep(0.08)#进程休眠间隔
-        sys.stdout.write('\r'+"不用担心, 进程没卡住, 只是待处理的文件比较多    \\")
+        sys.stdout.write('\r'+"不用担心, 进程并没有卡死, 只是待处理的文件比较多    \\")
         sys.stdout.flush()
         time.sleep(0.08)
-        sys.stdout.write('\r'+"不用担心, 进程没卡住, 只是待处理的文件比较多    |")
+        sys.stdout.write('\r'+"不用担心, 进程并没有卡死, 只是待处理的文件比较多    |")
         sys.stdout.flush()
         time.sleep(0.08)
-        sys.stdout.write('\r'+"不用担心, 进程没卡住, 只是待处理的文件比较多    /")
-        sys.stdout.flush()
-        time.sleep(0.08)
-
-    if breakLoop == True:
-        sys.stdout.write("\rDone                                                    ")
-        sys.stdout.flush()
-        sys.stdout.write("\rDone")
-        sys.stdout.flush()
-        return
-    else:
-        sys.stdout.write('\r'+"不用担心, 进程没卡住, 只是待处理的文件比较多.   -")
-        sys.stdout.flush()
-        time.sleep(0.08)
-        sys.stdout.write('\r'+"不用担心, 进程没卡住, 只是待处理的文件比较多.   \\")
-        sys.stdout.flush()
-        time.sleep(0.08)
-        sys.stdout.write('\r'+"不用担心, 进程没卡住, 只是待处理的文件比较多.   |")
-        sys.stdout.flush()
-        time.sleep(0.08)
-        sys.stdout.write('\r'+"不用担心, 进程没卡住, 只是待处理的文件比较多.   /")
+        sys.stdout.write('\r'+"不用担心, 进程并没有卡死, 只是待处理的文件比较多    /")
         sys.stdout.flush()
         time.sleep(0.08)
 
@@ -103,16 +83,16 @@ def loadingShow():
         sys.stdout.flush()
         return
     else:
-        sys.stdout.write('\r'+"不用担心, 进程没卡住, 只是待处理的文件比较多..  -")
+        sys.stdout.write('\r'+"不用担心, 进程并没有卡死, 只是待处理的文件比较多.   -")
         sys.stdout.flush()
         time.sleep(0.08)
-        sys.stdout.write('\r'+"不用担心, 进程没卡住, 只是待处理的文件比较多..  \\")
+        sys.stdout.write('\r'+"不用担心, 进程并没有卡死, 只是待处理的文件比较多.   \\")
         sys.stdout.flush()
         time.sleep(0.08)
-        sys.stdout.write('\r'+"不用担心, 进程没卡住, 只是待处理的文件比较多..  |")
+        sys.stdout.write('\r'+"不用担心, 进程并没有卡死, 只是待处理的文件比较多.   |")
         sys.stdout.flush()
         time.sleep(0.08)
-        sys.stdout.write('\r'+"不用担心, 进程没卡住, 只是待处理的文件比较多..  /")
+        sys.stdout.write('\r'+"不用担心, 进程并没有卡死, 只是待处理的文件比较多.   /")
         sys.stdout.flush()
         time.sleep(0.08)
 
@@ -123,16 +103,36 @@ def loadingShow():
         sys.stdout.flush()
         return
     else:
-        sys.stdout.write('\r'+"不用担心, 进程没卡住, 只是待处理的文件比较多... -")
+        sys.stdout.write('\r'+"不用担心, 进程并没有卡死, 只是待处理的文件比较多..  -")
         sys.stdout.flush()
         time.sleep(0.08)
-        sys.stdout.write('\r'+"不用担心, 进程没卡住, 只是待处理的文件比较多... \\")
+        sys.stdout.write('\r'+"不用担心, 进程并没有卡死, 只是待处理的文件比较多..  \\")
         sys.stdout.flush()
         time.sleep(0.08)
-        sys.stdout.write('\r'+"不用担心, 进程没卡住, 只是待处理的文件比较多... |")
+        sys.stdout.write('\r'+"不用担心, 进程并没有卡死, 只是待处理的文件比较多..  |")
         sys.stdout.flush()
         time.sleep(0.08)
-        sys.stdout.write('\r'+"不用担心, 进程没卡住, 只是待处理的文件比较多... /")
+        sys.stdout.write('\r'+"不用担心, 进程并没有卡死, 只是待处理的文件比较多..  /")
+        sys.stdout.flush()
+        time.sleep(0.08)
+
+    if breakLoop == True:
+        sys.stdout.write("\rDone                                                    ")
+        sys.stdout.flush()
+        sys.stdout.write("\rDone")
+        sys.stdout.flush()
+        return
+    else:
+        sys.stdout.write('\r'+"不用担心, 进程并没有卡死, 只是待处理的文件比较多... -")
+        sys.stdout.flush()
+        time.sleep(0.08)
+        sys.stdout.write('\r'+"不用担心, 进程并没有卡死, 只是待处理的文件比较多... \\")
+        sys.stdout.flush()
+        time.sleep(0.08)
+        sys.stdout.write('\r'+"不用担心, 进程并没有卡死, 只是待处理的文件比较多... |")
+        sys.stdout.flush()
+        time.sleep(0.08)
+        sys.stdout.write('\r'+"不用担心, 进程并没有卡死, 只是待处理的文件比较多... /")
         sys.stdout.flush()
         time.sleep(0.08)
     if breakLoop == True:
@@ -162,12 +162,11 @@ def findBundleInDir(dirPath):
     for i in range(0, len(list)):
         path = os.path.join(dirPath, list[i])
         path = path.replace("\\", "/")
-        file_extension = os.path.splitext(list[i])[1]
-        if os.path.isdir(path):  # 这个是文件夹 继续递归向下遍历
-            findBundleInDir(path)
+        
+        if os.path.isdir(path) and os.path.exists(path + ".meta"):  # 这个是文件夹 继续递归向下遍历
         # 找到与文件夹对应的 .meta 检查一下它是不是bundle
-        elif file_extension == ".meta" and os.path.isdir(path.split(".meta")[0]):
-            with open(path, "r", encoding="utf-8") as file:
+            metaPath = path + ".meta"
+            with open(metaPath, "r", encoding="utf-8") as file:
                 read = file.read()
                 jsonData = json.loads(read)
                 # 关于于bundle的.meta数据 3.7.x 和 3.6.x 不太一样
@@ -175,11 +174,12 @@ def findBundleInDir(dirPath):
                     if "isBundle" in jsonData["userData"] and jsonData["userData"]["isBundle"] == True:
                         if "bundleName" in jsonData["userData"]:
                             bundleNames.append(
-                                [jsonData["userData"]["bundleName"], path.split(".meta")[0]])
+                                [jsonData["userData"]["bundleName"], path])
                         else:
-                            bundleNames.append([os.path.basename(path).split(".")[
-                                                0], path.split(".meta")[0]])
-
+                            bundleNames.append([os.path.basename(metaPath).split(".")[
+                                                0], path])
+                    else:
+                        findBundleInDir(path)
 
 
 findBundleInDir("./assets")
@@ -193,8 +193,9 @@ def findAssetInDir(bundleName, bundlePath, dirPath):
     for i in range(0, len(list)):
         path = os.path.join(dirPath, list[i])
         if os.path.isfile(path):  # 这个是文件
-
-            file_extension = os.path.splitext(list[i])[1]
+            metaArr = os.path.splitext(list[i])
+            file_path = metaArr[0].lower()
+            file_extension = metaArr[1].lower()
             if file_extension != ".meta":  # 这个文件不是.meta
                 # print(list[i])
                 path = path.replace("\\", "/")
@@ -203,8 +204,19 @@ def findAssetInDir(bundleName, bundlePath, dirPath):
                     filePathArray[bundleName] = []
                     global fileCount
                     fileCount += 1
-
-                fileArray[bundleName].append(path.split(bundlePath+"/")[1])
+                # print("path =",path ,"   ",file_path, "   ",file_extension) # ./assets/atlas/girlTextures/girlTexture8.png     girltexture8     .png
+                ########################################################### 过滤一些正常情况下 程序无需使用的资源  例如纹理集的大图 骨骼动画的纹理采集配置等
+                """ if file_extension == ".json":
+                    if path.split("_").pop() == "tex.json" and os.path.exists(path.replace("_tex.json", "_ske.json")): # 这是一个龙骨的纹理采集配置 不属于主控文件  不必配置进项目
+                        continue
+                if file_extension == ".txt":
+                    if file_path.split(".").pop() == "atlas" and  os.path.exists(path.replace(".atlas.txt", ".json")) and os.path.exists(path.replace(".atlas.txt", ".png")): # 这是一个spine的纹理采集配置 不属于主控文件  不必配置进项目
+                        continue
+                if file_extension == ".png":
+                    if os.path.exists(path.replace(".png", ".json")) or os.path.exists(path.replace(".png", ".plist")): #这个png有同路径的配置文件 说明它不属于主控文件  不必配置进项目
+                        continue """
+                ###########################################################
+                fileArray[bundleName].append(path.split(bundlePath + "/")[1])
                 filePathArray[bundleName].append(path)
                 # if bundleName == "resources":
                 # print(path.split(bundlePath+"/")[1])
@@ -225,6 +237,7 @@ if not os.path.exists("./assets/script/config"):
 info = ""
 hanldedPathList = []
 dataObj = {}
+breakLoop = True
 def mainMethod(tName):
     global fileArray
     global dataObj
@@ -239,7 +252,6 @@ def mainMethod(tName):
         fileNameArray = []
         _len = len(valueArr)
         for i in range(0, _len):
-           
             fileName = os.path.basename(valueArr[i])
             _pathArr = valueArr[i].split(".")
             _pathArr.pop()
@@ -325,19 +337,19 @@ def mainMethod(tName):
                 assetType = "TextAsset"
             fileURLArr = valueArr[i].split("." + file_extension)
             
-            '''
+             
             ########################################
-            # 使用压缩uuid (试验中) 如果不能正常使用 就注释掉这一段   (输出配置文件 压缩uuid的耗时是不压缩的3~4倍 如果有上万个文件就很更加明显了  但是压缩uuid后输出的文件 体积会略微小一点)
-            if uuid != "":
-                uuid = compresse(uuid)
+            # 使用压缩uuid (试验中) 如果不能正常使用 就注释掉这一段   (输出配置文件 压缩uuid的耗时是不压缩的2~3倍 如果有上万个文件就很更加明显了  但是压缩uuid后输出的文件 体积会略微小一点)
+            """ if uuid != "":
+                uuid = compresse(uuid) """
             ########################################
-            '''
+            
             
             # 使用 "文件名_文件格式" 做key  例如  bg_jpg: { bundle: "res", url: "bg", ext: ".jpg", type: SpriteFrame, uuid: "2b14f3a8-b889-4ee4-8e8c-4ac66d19e4c0" }
             # 缺点是容易出现同名的 key 所以发生重复时自动在key后面加个 "$<增量>" 作为后缀以便区分  例如 bg_jpg$1: { bundle: "res", url: "sub1/bg", ext: ".jpg", type: SpriteFrame, uuid: "2abbf3c3-f370-4628-bf7e-5309b079dd06" },   bg_jpg$2: { bundle: "res", url: "sub2/bg", ext: ".jpg", type: SpriteFrame, uuid: "343708b9-308b-4def-8b66-680b41b23b48" }
             newStr = fileName + ": { bundle: \"" + key + "\", url: \"" + fileURLArr[
                 0] + "\", ext: \"." + file_extension + "\", type: " + assetType + (", uuid: \"" + uuid + "\" }" if uuid != "" else " }")
-            # print(newStr) # 显示详细信息
+            print(newStr) # 显示详细信息
 
             if (key in dataObj) == False:
                 dataObj[key] = {}
@@ -353,8 +365,8 @@ def mainMethod(tName):
             '''
 
 
-#目前测试结果 导出36828个文件配置耗时152.514648秒
-for i in range(8):
+#目前测试结果 8个子线程 导出36828个文件配置耗时125秒
+for i in range(1):
     t = Thread(target=mainMethod, args=[f"线程{i + 1}:"], name=f"线程{i + 1}:")
     t.daemon = True
     t.start()
@@ -367,7 +379,7 @@ for i in range(len(tList)):
 
 
 
-
+print("\n")
 
 
 
@@ -388,11 +400,12 @@ with open("./assets/script/config/usingAssets.ts", "w+", encoding="utf-8") as fi
         ###############################################################
         subCount = len(dataObj[key])
         for sub in dataObj[key]:
+            subCount -= 1
             subData = dataObj[key][sub]
             #subDataStr = json.dumps(subData)
             content = sub + ": " + "{ bundle: \"" + subData["bundle"] + "\", url: \"" + subData["url"] + "\", ext: \"." + subData["ext"] + "\", type: " + subData["type"] + (", uuid: \"" + subData["uuid"] + "\" }" if ("uuid" in subData and subData["uuid"] != "") else " }")
             subDataStr = "\t\t" + content
-            print(content)
+            # print(content)
             file.write(subDataStr)
             file.write(",\n" if subCount > 0 else "\n")
         ###############################################################
@@ -406,8 +419,11 @@ with open("./assets/script/config/usingAssets.ts", "w+", encoding="utf-8") as fi
         "globalThis[\"usingAssets\"] = usingAssets;\n")
 
     file.write("\n\nexport const usingBundles = {"+"")
+
+    nameCount = len(bundleNames)
     for valueArr in bundleNames:
-        file.write("\n\t" + valueArr[0] + ": " + "\"" + valueArr[0] + "\",")
+        nameCount -= 1
+        file.write("\n\t" + valueArr[0] + ": " + "\"" + valueArr[0] + ("\"," if nameCount > 0 else "\""))
     file.write("\n}\n")
     file.write(
         "globalThis[\"usingBundles\"] = usingBundles;")

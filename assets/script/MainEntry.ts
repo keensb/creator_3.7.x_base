@@ -140,7 +140,7 @@ export class MainEntry extends Component {
 
     private unUseAsset(): void {
         this.faceSp.spriteFrame = null;
-
+        usingAssets.atlas.girlTextures_girlTexture0_plist.url
         //this.currentSF.decRef();
         //assetManager.releaseAsset(this.currentSF);
     }

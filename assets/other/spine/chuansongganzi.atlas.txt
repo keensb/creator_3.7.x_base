@@ -1,0 +1,27 @@
+
+chuansongganzi.png
+size: 139,45
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+ganzi
+  rotate: true
+  xy: 2, 7
+  size: 36, 75
+  orig: 36, 75
+  offset: 0, 0
+  index: -1
+houmian
+  rotate: true
+  xy: 79, 2
+  size: 41, 58
+  orig: 41, 58
+  offset: 0, 0
+  index: -1
+qianmian
+  rotate: true
+  xy: 79, 2
+  size: 41, 58
+  orig: 41, 58
+  offset: 0, 0
+  index: -1

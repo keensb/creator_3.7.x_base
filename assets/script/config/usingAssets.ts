@@ -18,35 +18,45 @@ export const usingAssets = {
 	atlas: {
 		girlTextures_girlTexture0_plist: { bundle: "atlas", url: "girlTextures/girlTexture0", ext: ".plist", type: SpriteAtlas, uuid: "9db7a41a-681e-444e-bbe7-1a00c9dcc224" },
 		girlTextures_girlTexture0_png: { bundle: "atlas", url: "girlTextures/girlTexture0", ext: ".png", type: SpriteFrame, uuid: "cf5be5c2-d1b0-48b0-82c9-4a6911bfc64c" },
-		girlTextures_girlTexture1_png: { bundle: "atlas", url: "girlTextures/girlTexture1", ext: ".png", type: SpriteFrame, uuid: "b0236945-87ed-4fa5-b8d7-059a9084aab4" },
 		girlTextures_girlTexture1_plist: { bundle: "atlas", url: "girlTextures/girlTexture1", ext: ".plist", type: SpriteAtlas, uuid: "0bf002e9-7b2c-4234-8c03-81b81713a745" },
+		girlTextures_girlTexture1_png: { bundle: "atlas", url: "girlTextures/girlTexture1", ext: ".png", type: SpriteFrame, uuid: "b0236945-87ed-4fa5-b8d7-059a9084aab4" },
+		girlTextures_girlTexture2_png: { bundle: "atlas", url: "girlTextures/girlTexture2", ext: ".png", type: SpriteFrame, uuid: "6826c0ce-6133-403d-8339-447211f8bf5d" },
 		girlTextures_girlTexture2_plist: { bundle: "atlas", url: "girlTextures/girlTexture2", ext: ".plist", type: SpriteAtlas, uuid: "c8987c2e-e7e1-4cae-b204-a09f4be5f498" },
 		girlTextures_girlTexture3_plist: { bundle: "atlas", url: "girlTextures/girlTexture3", ext: ".plist", type: SpriteAtlas, uuid: "748bd096-bc5c-4a40-9ceb-3c8151c56cf0" },
-		girlTextures_girlTexture2_png: { bundle: "atlas", url: "girlTextures/girlTexture2", ext: ".png", type: SpriteFrame, uuid: "6826c0ce-6133-403d-8339-447211f8bf5d" },
-		girlTextures_girlTexture3_png: { bundle: "atlas", url: "girlTextures/girlTexture3", ext: ".png", type: SpriteFrame, uuid: "0b0e43d5-5ece-41f6-b4ae-e2ea625c5b0a" },
-		girlTextures_girlTexture4_png: { bundle: "atlas", url: "girlTextures/girlTexture4", ext: ".png", type: SpriteFrame, uuid: "2d2cf5ae-a729-4de3-b466-99e3b1c92797" },
-		girlTextures_girlTexture5_plist: { bundle: "atlas", url: "girlTextures/girlTexture5", ext: ".plist", type: SpriteAtlas, uuid: "4b546697-2eb4-4ea8-9db0-3772a62b1df5" },
-		girlTextures_girlTexture5_png: { bundle: "atlas", url: "girlTextures/girlTexture5", ext: ".png", type: SpriteFrame, uuid: "a84e7a0b-1128-4529-84b0-3bd754e71ee3" },
 		girlTextures_girlTexture4_plist: { bundle: "atlas", url: "girlTextures/girlTexture4", ext: ".plist", type: SpriteAtlas, uuid: "397125e3-5be8-4aba-bc19-405ef832077c" },
+		girlTextures_girlTexture3_png: { bundle: "atlas", url: "girlTextures/girlTexture3", ext: ".png", type: SpriteFrame, uuid: "0b0e43d5-5ece-41f6-b4ae-e2ea625c5b0a" },
+		girlTextures_girlTexture5_png: { bundle: "atlas", url: "girlTextures/girlTexture5", ext: ".png", type: SpriteFrame, uuid: "a84e7a0b-1128-4529-84b0-3bd754e71ee3" },
 		girlTextures_girlTexture6_plist: { bundle: "atlas", url: "girlTextures/girlTexture6", ext: ".plist", type: SpriteAtlas, uuid: "3bc77abb-85da-44ba-9db8-7b23da1917b6" },
-		girlTextures_girlTexture6_png: { bundle: "atlas", url: "girlTextures/girlTexture6", ext: ".png", type: SpriteFrame, uuid: "e66ca903-5df8-4c6f-8379-6cc60539c768" },
-		girlTextures_girlTexture7_png: { bundle: "atlas", url: "girlTextures/girlTexture7", ext: ".png", type: SpriteFrame, uuid: "96031e02-dde4-4152-a695-2ba1fbc719f5" },
-		girlTextures_girlTexture8_plist: { bundle: "atlas", url: "girlTextures/girlTexture8", ext: ".plist", type: SpriteAtlas, uuid: "b2dbb554-700d-45f1-8068-daee4db07ce4" },
+		girlTextures_girlTexture4_png: { bundle: "atlas", url: "girlTextures/girlTexture4", ext: ".png", type: SpriteFrame, uuid: "2d2cf5ae-a729-4de3-b466-99e3b1c92797" },
 		girlTextures_girlTexture7_plist: { bundle: "atlas", url: "girlTextures/girlTexture7", ext: ".plist", type: SpriteAtlas, uuid: "a2e03172-8bca-4eae-b4ad-353d8ea8df04" },
+		girlTextures_girlTexture7_png: { bundle: "atlas", url: "girlTextures/girlTexture7", ext: ".png", type: SpriteFrame, uuid: "96031e02-dde4-4152-a695-2ba1fbc719f5" },
+		girlTextures_girlTexture6_png: { bundle: "atlas", url: "girlTextures/girlTexture6", ext: ".png", type: SpriteFrame, uuid: "e66ca903-5df8-4c6f-8379-6cc60539c768" },
+		girlTextures_girlTexture5_plist: { bundle: "atlas", url: "girlTextures/girlTexture5", ext: ".plist", type: SpriteAtlas, uuid: "4b546697-2eb4-4ea8-9db0-3772a62b1df5" },
 		girlTextures_girlTexture8_png: { bundle: "atlas", url: "girlTextures/girlTexture8", ext: ".png", type: SpriteFrame, uuid: "6dee423a-c439-4593-8858-ce43270b1e2c" },
+		girlTextures_girlTexture8_plist: { bundle: "atlas", url: "girlTextures/girlTexture8", ext: ".plist", type: SpriteAtlas, uuid: "b2dbb554-700d-45f1-8068-daee4db07ce4" }
 	},
 	image: {
-		big_shengguangjisi_png: { bundle: "image", url: "big_shengguangjisi", ext: ".png", type: SpriteFrame, uuid: "77bbda0d-be76-4412-9b70-21c31d245527" },
 		big_huawang_png: { bundle: "image", url: "big_huawang", ext: ".png", type: SpriteFrame, uuid: "44c65b20-6702-4f0c-b674-01fe3112454b" },
 		big_daofengyizhi_png: { bundle: "image", url: "big_daofengyizhi", ext: ".png", type: SpriteFrame, uuid: "ef9a2b8b-daff-4479-b976-a33234861fa3" },
 		big_qinsexiannv_png: { bundle: "image", url: "big_qinsexiannv", ext: ".png", type: SpriteFrame, uuid: "61ae7673-8c17-413a-8b9f-0bd12cbbac2f" },
+		big_shengguangjisi_png: { bundle: "image", url: "big_shengguangjisi", ext: ".png", type: SpriteFrame, uuid: "77bbda0d-be76-4412-9b70-21c31d245527" },
 		big_shuguangnvshen_png: { bundle: "image", url: "big_shuguangnvshen", ext: ".png", type: SpriteFrame, uuid: "9bb7d5c5-b071-45b5-a728-126e4ae9c281" },
-		big_zhanzhengzhinv_png: { bundle: "image", url: "big_zhanzhengzhinv", ext: ".png", type: SpriteFrame, uuid: "3c0c9776-e49e-462e-9508-a022e51d5267" },
-		zxnn_main_atlas_plist: { bundle: "image", url: "zxnn_main_atlas", ext: ".plist", type: SpriteAtlas, uuid: "ec6af875-be27-41a4-92be-06042e848fde" },
 		zxnn_main_atlas_png: { bundle: "image", url: "zxnn_main_atlas", ext: ".png", type: SpriteFrame, uuid: "e80e626f-66d8-47ed-afd6-a74a52d53b22" },
+		zxnn_main_atlas_plist: { bundle: "image", url: "zxnn_main_atlas", ext: ".plist", type: SpriteAtlas, uuid: "ec6af875-be27-41a4-92be-06042e848fde" },
+		big_zhanzhengzhinv_png: { bundle: "image", url: "big_zhanzhengzhinv", ext: ".png", type: SpriteFrame, uuid: "3c0c9776-e49e-462e-9508-a022e51d5267" }
+	},
+	dragon: {
+		bawanglong_ske_json: { bundle: "dragon", url: "bawanglong_ske", ext: ".json", type: dragonBones.DragonBonesAsset, uuid: "6349c8e4-3b1d-4289-8e1b-a34380e15e98" },
+		bawanglong_tex_json: { bundle: "dragon", url: "bawanglong_tex", ext: ".json", type: dragonBones.DragonBonesAtlasAsset, uuid: "b047be6f-e1f8-4dd8-b09f-7ca6d455c643" },
+		bawanglong_tex_png: { bundle: "dragon", url: "bawanglong_tex", ext: ".png", type: SpriteFrame, uuid: "e518b498-27c8-4648-b166-55c24c73ba25" }
+	},
+	spine: {
+		chuansongganzi_atlas_txt: { bundle: "spine", url: "chuansongganzi.atlas", ext: ".txt", type: TextAsset, uuid: "acff6db5-f5d6-48fa-a9ed-1c49a467b2b4" },
+		chuansongganzi_json: { bundle: "spine", url: "chuansongganzi", ext: ".json", type: sp.SkeletonData, uuid: "764b3ff7-4795-42a0-858d-6b788010152b" },
+		chuansongganzi_png: { bundle: "spine", url: "chuansongganzi", ext: ".png", type: SpriteFrame, uuid: "a63ccdec-b228-4bec-b261-4bcc1f8eb5e7" }
 	},
 	prefab: {
-		prefab_png_prefab: { bundle: "prefab", url: "prefab_png", ext: ".prefab", type: Prefab, uuid: "5da5310c-5f5c-456a-ba61-755d68fbc7ee" },
+		prefab_png_prefab: { bundle: "prefab", url: "prefab_png", ext: ".prefab", type: Prefab, uuid: "5da5310c-5f5c-456a-ba61-755d68fbc7ee" }
 	}
 }
 
@@ -56,7 +66,8 @@ globalThis["usingAssets"] = usingAssets;
 export const usingBundles = {
 	atlas: "atlas",
 	image: "image",
-	prefab: "prefab",
-	swf: "swf",
+	dragon: "dragon",
+	spine: "spine",
+	prefab: "prefab"
 }
 globalThis["usingBundles"] = usingBundles;
