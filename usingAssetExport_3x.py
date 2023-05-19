@@ -51,11 +51,14 @@ from compressedUuid import compresse
 bundleNames = []
 
 start_time = time.time()
-
 breakLoop = False
 
 def loadingShow():
     global breakLoop
+    global fileCount
+
+    strFileCount = str(fileCount)
+    
     if breakLoop == True:
         sys.stdout.write("\rDone                                                    ")
         sys.stdout.flush()
@@ -63,18 +66,23 @@ def loadingShow():
         sys.stdout.flush()
         return
     else:
-        sys.stdout.write('\r'+"不用担心, 进程并没有卡死, 只是待处理的文件比较多    -")#单行输出   平时用的换行输出 print 其实就等于 sys.stdout.write(内容+'\n')
+        strFileCount = str(fileCount)
+        sys.stdout.write('\r'+f"不用担心, 进程并没有卡死, 只是待处理的文件比较多    -" + " " + strFileCount)#单行输出   平时用的换行输出 print 其实就等于 sys.stdout.write(内容+'\n')
         sys.stdout.flush()#结束字符串缓冲,即时显示文字内容 没有这一行可能会出现类似 跳帧 的不连贯状况
         time.sleep(0.08)#进程休眠间隔
-        sys.stdout.write('\r'+"不用担心, 进程并没有卡死, 只是待处理的文件比较多    \\")
+        strFileCount = str(fileCount)
+        sys.stdout.write('\r'+"不用担心, 进程并没有卡死, 只是待处理的文件比较多    \\" + " " + strFileCount)
         sys.stdout.flush()
         time.sleep(0.08)
-        sys.stdout.write('\r'+"不用担心, 进程并没有卡死, 只是待处理的文件比较多    |")
+        strFileCount = str(fileCount)
+        sys.stdout.write('\r'+"不用担心, 进程并没有卡死, 只是待处理的文件比较多    |" + " " + strFileCount)
         sys.stdout.flush()
         time.sleep(0.08)
-        sys.stdout.write('\r'+"不用担心, 进程并没有卡死, 只是待处理的文件比较多    /")
+        strFileCount = str(fileCount)
+        sys.stdout.write('\r'+"不用担心, 进程并没有卡死, 只是待处理的文件比较多    /" + " " + strFileCount)
         sys.stdout.flush()
         time.sleep(0.08)
+        strFileCount = str(fileCount)
 
     if breakLoop == True:
         sys.stdout.write("\rDone                                                    ")
@@ -83,18 +91,23 @@ def loadingShow():
         sys.stdout.flush()
         return
     else:
-        sys.stdout.write('\r'+"不用担心, 进程并没有卡死, 只是待处理的文件比较多.   -")
+        strFileCount = str(fileCount)
+        sys.stdout.write('\r'+"不用担心, 进程并没有卡死, 只是待处理的文件比较多.   -" + " " + strFileCount)
         sys.stdout.flush()
         time.sleep(0.08)
-        sys.stdout.write('\r'+"不用担心, 进程并没有卡死, 只是待处理的文件比较多.   \\")
+        strFileCount = str(fileCount)
+        sys.stdout.write('\r'+"不用担心, 进程并没有卡死, 只是待处理的文件比较多.   \\" + " " + strFileCount)
         sys.stdout.flush()
         time.sleep(0.08)
-        sys.stdout.write('\r'+"不用担心, 进程并没有卡死, 只是待处理的文件比较多.   |")
+        strFileCount = str(fileCount)
+        sys.stdout.write('\r'+"不用担心, 进程并没有卡死, 只是待处理的文件比较多.   |" + " " + strFileCount)
         sys.stdout.flush()
         time.sleep(0.08)
-        sys.stdout.write('\r'+"不用担心, 进程并没有卡死, 只是待处理的文件比较多.   /")
+        strFileCount = str(fileCount)
+        sys.stdout.write('\r'+"不用担心, 进程并没有卡死, 只是待处理的文件比较多.   /" + " " + strFileCount)
         sys.stdout.flush()
         time.sleep(0.08)
+        strFileCount = str(fileCount)
 
     if breakLoop == True:
         sys.stdout.write("\rDone                                                    ")
@@ -103,18 +116,23 @@ def loadingShow():
         sys.stdout.flush()
         return
     else:
-        sys.stdout.write('\r'+"不用担心, 进程并没有卡死, 只是待处理的文件比较多..  -")
+        strFileCount = str(fileCount)
+        sys.stdout.write('\r'+"不用担心, 进程并没有卡死, 只是待处理的文件比较多..  -" + " " + strFileCount)
         sys.stdout.flush()
         time.sleep(0.08)
-        sys.stdout.write('\r'+"不用担心, 进程并没有卡死, 只是待处理的文件比较多..  \\")
+        strFileCount = str(fileCount)
+        sys.stdout.write('\r'+"不用担心, 进程并没有卡死, 只是待处理的文件比较多..  \\" + " " + strFileCount)
         sys.stdout.flush()
         time.sleep(0.08)
-        sys.stdout.write('\r'+"不用担心, 进程并没有卡死, 只是待处理的文件比较多..  |")
+        strFileCount = str(fileCount)
+        sys.stdout.write('\r'+"不用担心, 进程并没有卡死, 只是待处理的文件比较多..  |" + " " + strFileCount)
         sys.stdout.flush()
         time.sleep(0.08)
-        sys.stdout.write('\r'+"不用担心, 进程并没有卡死, 只是待处理的文件比较多..  /")
+        strFileCount = str(fileCount)
+        sys.stdout.write('\r'+"不用担心, 进程并没有卡死, 只是待处理的文件比较多..  /" + " " + strFileCount)
         sys.stdout.flush()
         time.sleep(0.08)
+        strFileCount = str(fileCount)
 
     if breakLoop == True:
         sys.stdout.write("\rDone                                                    ")
@@ -123,18 +141,23 @@ def loadingShow():
         sys.stdout.flush()
         return
     else:
-        sys.stdout.write('\r'+"不用担心, 进程并没有卡死, 只是待处理的文件比较多... -")
+        strFileCount = str(fileCount)
+        sys.stdout.write('\r'+"不用担心, 进程并没有卡死, 只是待处理的文件比较多... -" + " " + strFileCount)
         sys.stdout.flush()
         time.sleep(0.08)
-        sys.stdout.write('\r'+"不用担心, 进程并没有卡死, 只是待处理的文件比较多... \\")
+        strFileCount = str(fileCount)
+        sys.stdout.write('\r'+"不用担心, 进程并没有卡死, 只是待处理的文件比较多... \\" + " " + strFileCount)
         sys.stdout.flush()
         time.sleep(0.08)
-        sys.stdout.write('\r'+"不用担心, 进程并没有卡死, 只是待处理的文件比较多... |")
+        strFileCount = str(fileCount)
+        sys.stdout.write('\r'+"不用担心, 进程并没有卡死, 只是待处理的文件比较多... |" + " " + strFileCount)
         sys.stdout.flush()
         time.sleep(0.08)
-        sys.stdout.write('\r'+"不用担心, 进程并没有卡死, 只是待处理的文件比较多... /")
+        strFileCount = str(fileCount)
+        sys.stdout.write('\r'+"不用担心, 进程并没有卡死, 只是待处理的文件比较多... /" + " " + strFileCount)
         sys.stdout.flush()
         time.sleep(0.08)
+        strFileCount = str(fileCount)
     if breakLoop == True:
         sys.stdout.write("\rDone                                                    ")
         sys.stdout.flush()
@@ -149,12 +172,12 @@ def loadingShow():
 print("")
 
 
-
+fileArray = {}
+filePathArray = {}
+fileCount = 0
 tList = []
 
-runingT = Thread(target=loadingShow, args=[], name=f"线程{0}:")
-runingT.daemon = True
-runingT.start()
+
 
 
 def findBundleInDir(dirPath):
@@ -183,12 +206,11 @@ def findBundleInDir(dirPath):
 
 
 findBundleInDir("./assets")
-fileArray = {}
-filePathArray = {}
-fileCount = 0
+
 
 
 def findAssetInDir(bundleName, bundlePath, dirPath):
+    global fileCount
     list = os.listdir(dirPath)  # 列出文件夹下所有的目录与文件
     for i in range(0, len(list)):
         path = os.path.join(dirPath, list[i])
@@ -202,11 +224,12 @@ def findAssetInDir(bundleName, bundlePath, dirPath):
                 if fileArray.get(bundleName) == None:
                     fileArray[bundleName] = []
                     filePathArray[bundleName] = []
-                    global fileCount
-                    fileCount += 1
+                   
+                    
                 # print("path =",path ,"   ",file_path, "   ",file_extension) # ./assets/atlas/girlTextures/girlTexture8.png     girltexture8     .png
                 ########################################################### 过滤一些正常情况下 程序无需使用的资源  例如纹理集的大图 骨骼动画的纹理采集配置等
-                """ if file_extension == ".json":
+                '''
+                if file_extension == ".json":
                     if path.split("_").pop() == "tex.json" and os.path.exists(path.replace("_tex.json", "_ske.json")): # 这是一个龙骨的纹理采集配置 不属于主控文件  不必配置进项目
                         continue
                 if file_extension == ".txt":
@@ -214,10 +237,17 @@ def findAssetInDir(bundleName, bundlePath, dirPath):
                         continue
                 if file_extension == ".png":
                     if os.path.exists(path.replace(".png", ".json")) or os.path.exists(path.replace(".png", ".plist")): #这个png有同路径的配置文件 说明它不属于主控文件  不必配置进项目
-                        continue """
+                        continue
+                '''
                 ###########################################################
                 fileArray[bundleName].append(path.split(bundlePath + "/")[1])
                 filePathArray[bundleName].append(path)
+                fileCount += 1
+
+                if fileCount == 5000:
+                    runingT = Thread(target=loadingShow, args=[], name=f"线程{0}:")
+                    runingT.daemon = True
+                    runingT.start()
                 # if bundleName == "resources":
                 # print(path.split(bundlePath+"/")[1])
         elif os.path.isdir(path):  # 这个是文件夹 继续递归向下遍历
@@ -241,11 +271,8 @@ breakLoop = True
 def mainMethod(tName):
     global fileArray
     global dataObj
-    global fileCount
 
     for key in fileArray:
-        
-        fileCount -= 1
         valueArr = fileArray[key]
         filePathArr = filePathArray[key]
         fileNameArray = []
@@ -430,6 +457,6 @@ with open("./assets/script/config/usingAssets.ts", "w+", encoding="utf-8") as fi
 pass_time = time.time() - start_time
 zs = len(hanldedPathList)
 
-print("\n\n=============================================导出配置完成 资源总数: " + str(zs) + "   耗时(秒): " +  str(pass_time) + "=============================================")
+print("\n\n=====================导出配置完成 资源总数: " + str(zs) + "   耗时(秒): " +  str(pass_time) + "=====================")
 breakLoop = True
 input("")

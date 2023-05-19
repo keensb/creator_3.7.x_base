@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, assetManager, Sprite, SpriteFrame, Button, NodeEventType, Texture2D, AudioClip, AudioSource, Asset, SpriteAtlas, find } from 'cc';
+import { _decorator, Component, Node, assetManager, Sprite, Button, NodeEventType, Texture2D, AudioClip, AudioSource, Asset, SpriteAtlas, find, SpriteFrame, ImageAsset } from 'cc';
 import { DEBUG } from 'cc/env';
 import { ClassDictionary } from './ClassDictionary';
 import { usingAssets } from './config/usingAssets';
@@ -35,7 +35,7 @@ export class MainEntry extends Component {
         this.btn3.node.on(NodeEventType.TOUCH_END, this.useAsset, this);
         this.btn4.node.on(NodeEventType.TOUCH_END, this.destroyAsset, this);
 
-        
+
 
         window["uid"] = this.sfUUID;
         window["f1"] = this.faceSp;
@@ -49,27 +49,61 @@ export class MainEntry extends Component {
     }
 
     async start() {
+
+        if (this.isLoading) return;
+        
+        //asyncAsset.bundleLoadOneAsset(
         //for(let x in usingAssets.atlas.girlTexture0_plist)
 
         let listObj: { [key: string]: SpriteAtlas } = {};
-        let count = 0;
+
         for (let i = 0; i < 9; i++) {
-            assetManager.loadAny(usingAssets.atlas["girlTextures_girlTexture" + i + "_plist"].uuid, null, (err, res: SpriteAtlas) => {
+            asyncAsset.loadAny(usingAssets.atlas["girlTextures_girlTexture" + i + "_plist"].uuid, null, (res: SpriteAtlas) => {
                 listObj[i] = res;
-                console.log("iiiiiiiiiiiii", i, listObj[i]);
-              
                 if (Object.keys(listObj).length == 9) {
                     let sfArr: SpriteFrame[] = [];
                     for (let j = 0; j < 9; j++) {
-                        console.log("jjjjjjjjjjjjj", j, listObj[j]);
                         for (let key in listObj[j].spriteFrames) {
                             sfArr.push(listObj[j].spriteFrames[key]);
                         }
                     }
 
-                    let anim: any = new AnimationLite(sfArr, 30);
+                    let anim: Node = new AnimationLite(sfArr, 30);
                     window["anim"] = anim;
                     anim.parent = find("Canvas");
+                }
+            });
+        }
+
+
+        let roleArr = new Array(456);
+        let count = 0;
+        for (let i = 1; i <= roleArr.length; i++) {
+            let n;
+            if (i < 10) {
+                n = "000" + i;
+            }
+            else if (i < 100) {
+                n = "00" + i;
+            }
+            else if (i < 1000) {
+                n = "0" + i;
+            }
+
+            asyncAsset.loadOneRemote(`http://172.16.70.38:5050/public/gif/role/role${n}.png`, (res: ImageAsset) => {
+                count++;
+                let texture = new Texture2D()
+                texture.image = res;
+                //console.log("res.url =",res.url);
+                let spriteFrame = new SpriteFrame();
+                spriteFrame.texture = texture;
+                roleArr[i - 1] = spriteFrame;
+                //console.log("count=", count, res);
+                if (count == roleArr.length) {
+                    let anim2: Node = new AnimationLite(roleArr, 30);
+                    window["anim2"] = anim2;
+                    anim2.parent = find("Canvas");
+                    anim2.x += 150
                 }
             });
         }
