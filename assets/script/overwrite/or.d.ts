@@ -8,7 +8,13 @@ declare module "cc" {//<----------注意:这里坑爹的地方  模块名不是 
         * 检测Node之下有没有这个Component ,有的话直接返回Component的引用; 没有的话自动新增Component实例再返回其引用
         * @param   componentType 组件类型
         */
-        getOrAddComponent<T extends Component>(componentType: new (...parmas) => T, ...agrs): T;
+        directGetComponent<T extends Component>(componentType: new (...parmas) => T, ...agrs): T;
+
+        /**
+        * 检测Node之下有没有这个Component ,有的话直接删除该组件
+        * @param   componentType 组件类型
+        */
+        directDeleteComponent<T extends Component>(componentType: new (...parmas) => T);
 
         /**
          * 检测BaseNode当前的最高父级节点是否为当前的Scene(director.getScene());  baseNode.stage不等同于baseNode.scene,  baseNode.stage会随着自身或任一父级容器的 加载/移除 检测自身当前最高父级节点是不是当前场景 并同时对外派发NodeEventType.STAGE_CHANGED消息通知

@@ -89,7 +89,7 @@ export class MainEntry extends Component {
             else if (i < 1000) {
                 n = "0" + i;
             }
-
+            
             asyncAsset.loadOneRemote(`http://172.16.70.38:5050/public/gif/role/role${n}.png`, (res: ImageAsset) => {
                 count++;
                 let texture = new Texture2D()
@@ -107,6 +107,8 @@ export class MainEntry extends Component {
                 }
             });
         }
+
+       
     }
 
     private isLoading: boolean = false;

@@ -28,8 +28,8 @@ class EngineOverrider {
             Object.defineProperty(Node.prototype, "spriteFrame", {
                 get: function () {
                     if (!this.getComponent(Sprite)) {
-                        console.warn("本节点原本不存在Sprite组件")
-                        this.addComponent(Sprite);
+                        //console.warn("本节点原本不存在Sprite组件 getter不会自动给节点添组件")
+                        return null;
                     }
                     return this.getComponent(Sprite).spriteFrame;
                 },
@@ -248,9 +248,18 @@ class EngineOverrider {
 
 
         //检测Node之下有没有这个Component, 有的话直接返回Component的引用; 没有的话自动新增Component实例再返回其引用
-        Node.prototype.getOrAddComponent = function <T extends Component>(componentType: new (...parmas) => T, ...args): T {
+        Node.prototype.directGetComponent = function <T extends Component>(componentType: new (...parmas) => T, ...args): T {
             return this.getComponent.call(this, componentType) || this.addComponent.call(this, componentType, ...args);
         }
+
+        //检测Node之下有没有这个Component, 有的话直接删除该组件;
+        Node.prototype.directDeleteComponent = function <T extends Component>(componentType: new (...parmas) => T): void {
+            let component = this.getComponent.call(this, componentType);
+            if (component) {
+                component.destroy();
+            }
+        }
+
 
         let spriteFrame_setFunc = getSetter(Sprite, "spriteFrame");//获取 Sprite 定义的 set spriteFrame()
         Object.defineProperty(Sprite.prototype, "spriteFrame", {
@@ -391,11 +400,11 @@ class EngineOverrider {
         Object.defineProperty(Node.prototype, "opacity", {
             get: function () {
                 //没有UIOpacity? 那就自动创建一个
-                return this.getOrAddComponent(UIOpacity).opacity;
+                return this.directGetComponent(UIOpacity).opacity;
             },
             set: function (value) {
                 //没有UIOpacity? 那就自动创建一个
-                this.getOrAddComponent(UIOpacity).opacity = value;
+                this.directGetComponent(UIOpacity).opacity = value;
             },
             enumerable: true,
             configurable: true
@@ -418,7 +427,7 @@ class EngineOverrider {
         Object.defineProperty(Node.prototype, "uiTransform", {
             get: function () {
                 //没有UITransform? 那就自动创建一个
-                return this.getOrAddComponent(UITransform);
+                return this.directGetComponent(UITransform);
             },
             enumerable: true,
             configurable: true
@@ -427,11 +436,11 @@ class EngineOverrider {
         Object.defineProperty(Node.prototype, "nodeWidth", {
             get: function () {
                 //没有UITransform? 那就自动创建一个
-                return this.getOrAddComponent(UITransform).width;
+                return this.directGetComponent(UITransform).width;
             },
             set: function (value) {
                 //没有UITransform? 那就自动创建一个
-                this.getOrAddComponent(UITransform).width = value;
+                this.directGetComponent(UITransform).width = value;
             },
             enumerable: true,
             configurable: true
@@ -441,11 +450,11 @@ class EngineOverrider {
         Object.defineProperty(Node.prototype, "nodeHeight", {
             get: function () {
                 //没有UITransform? 那就自动创建一个
-                return this.getOrAddComponent(UITransform).height;
+                return this.directGetComponent(UITransform).height;
             },
             set: function (value) {
                 //没有UITransform? 那就自动创建一个
-                this.getOrAddComponent(UITransform).height = value;
+                this.directGetComponent(UITransform).height = value;
             },
             enumerable: true,
             configurable: true

@@ -480,22 +480,23 @@ class AsyncAsset {
     /**
      *  把assetManager.loadAny转为异步队列 函数 可以通过 await实现
      */
-    public static async loadAny<T extends Asset>(requests: string, type?: (new (...args) => T)): Promise<T>;
-    public static async loadAny<T extends Asset>(requests: string, onComplete?: (res) => void): Promise<T>;
-    public static async loadAny<T extends Asset>(requests: string, type?: (new (...args) => T), onComplete?: (res) => void): Promise<T>;
-    public static async loadAny<T extends Asset>(requests: string, typeOrOnComplete?: (new (...args) => T) | ((res) => void), onComplete?: (res) => void): Promise<T> {
+    public static async loadAny<T extends Asset>(requests: string | { uuid: string }, type?: (new (...args) => T)): Promise<T>;
+    public static async loadAny<T extends Asset>(requests: string | { uuid: string }, onComplete?: (res) => void): Promise<T>;
+    public static async loadAny<T extends Asset>(requests: string | { uuid: string }, type?: (new (...args) => T), onComplete?: (res) => void): Promise<T>;
+    public static async loadAny<T extends Asset>(requests: string | { uuid: string }, typeOrOnComplete?: (new (...args) => T) | ((res) => void), onComplete?: (res) => void): Promise<T> {
         /* let type: new (...args) => T;
         let onComplete: (res) => void; */
+        var requestsObj = requests["uuid"] || requests;
         if (typeOrOnComplete) {
             let _type: any = typeOrOnComplete;
             if (_type == Asset || Object.getPrototypeOf(typeOrOnComplete) == Asset) {//typeOrOnComplete是类型参数
                 return new Promise<T>(resolve => {
-                    assetManager.loadAny(requests, typeOrOnComplete, (err, res: T) => {
+                    assetManager.loadAny(requestsObj, typeOrOnComplete, (err, res: T) => {
                         if (!err) {
                             if (res && !res.isValid) {
                                 assetManager.releaseAsset(res);//解除依赖关系 并从缓存字典中移除
                                 assetManager.assets.remove(res.uuid);
-                                assetManager.loadAny(requests, (err, res: T) => {
+                                assetManager.loadAny(requestsObj, (err, res: T) => {
                                     if (onComplete) {
                                         onComplete(res);
                                     }
@@ -521,12 +522,12 @@ class AsyncAsset {
             else {
                 let _typeOrOnComplete: any = typeOrOnComplete;//typeOrOnComplete是成功回调
                 return new Promise<T>(resolve => {
-                    assetManager.loadAny(requests, (err, res: T) => {
+                    assetManager.loadAny(requestsObj, (err, res: T) => {
                         if (!err) {
                             if (res && !res.isValid) {
                                 assetManager.releaseAsset(res);//解除依赖关系 并从缓存字典中移除
                                 assetManager.assets.remove(res.uuid);
-                                assetManager.loadAny(requests, (err, res: T) => {
+                                assetManager.loadAny(requestsObj, (err, res: T) => {
                                     _typeOrOnComplete(res);
                                     resolve(res);
                                 })
@@ -547,12 +548,12 @@ class AsyncAsset {
         }
         else {
             return new Promise<T>(resolve => {
-                assetManager.loadAny(requests, (err, res: T) => {
+                assetManager.loadAny(requestsObj, (err, res: T) => {
                     if (!err) {
                         if (res && !res.isValid) {
                             assetManager.releaseAsset(res);//解除依赖关系 并从缓存字典中移除
                             assetManager.assets.remove(res.uuid);
-                            assetManager.loadAny(requests, (err, res: T) => {
+                            assetManager.loadAny(requestsObj, (err, res: T) => {
                                 if (onComplete) {
                                     onComplete(res);
                                 }
