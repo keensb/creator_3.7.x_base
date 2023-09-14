@@ -6,10 +6,13 @@
   "files": [],
   "subMetas": {},
   "userData": {
-    "compressionType": {},
+    "compressionType": {
+      "web-desktop": "none"
+    },
     "isRemoteBundle": {
       "web-desktop": true
     },
-    "isBundle": true
+    "isBundle": true,
+    "bundleName": "atlas"
   }
 }

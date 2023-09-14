@@ -25,6 +25,44 @@ declare module "cc" {//<----------注意:这里坑爹的地方  模块名不是 
          * 检测本节点(最高级别为Scene)和其下各级子节点有没有这个Component, 有的话存进数组并最终返回
          */
         findSubComponent<T extends Component>(componentType: new (...parmas) => T, ...agrs): T[];
+
+        /**
+         * 获得本节点在全局的轮廓   如果是开发测试版, 你可以通过在控制台输入 $dd(node.getGlobalBounds()) 和 $dd(node.getGlobalBounds(true)) 观察绘制出的目标节点的轮廓
+         * @param   allSubNodes 是否通过递归把各级子节点的轮廓也算进去, 默认是false
+         */
+        getGlobalBounds(allSubNodes?:boolean): Rect;
+
+        /**
+         * 判断本节点的下面是否包含指定的节点
+         * @param   target 目标节点
+         */
+        contains(target: Node): boolean;
+
+        /**
+         * 递归获取本节点下各级子节点的列表(列表不包括本节点自身)
+         */
+        getAllSubNodes(): Node[];
+
+
+        /**
+         * 通过hashCode查找节点下的对象
+         */
+        getNodeByHashCode(hashCode: number): Node;
+        
+        /**
+         * 本节点在项目里的序列号 主要用于统计节点的创建数量
+         */
+        get hashCode(): number;
+
+        get gl_active(): boolean;
+
+        get gl_opacity(): number;
+
+        
+    }
+
+    export namespace Node{ 
+        export var hashCode: number;
     }
 
     export namespace AssetManager {
