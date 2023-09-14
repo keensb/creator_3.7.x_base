@@ -3,66 +3,92 @@
 //cocos creator 3.0+ 引擎代码位置  可以尝试覆盖这几个位置
 //CocosDashboard安装目录\resources\.editors\Creator\3.6.0\resources\resources\3d\engine\bin\.cache\dev\preview\bundled\index.js  主要
 //CocosDashboard安装目录\resources\.editors\Creator\3.6.0\resources\resources\3d\engine\cocos\core\scene-graph\node.ts  次要
-import { Asset, assetManager, AssetManager, CCObject, Component, debug, director, errorID, ImageAsset, Material, misc, Node, NodeActivator, NodeEventType, path, Prefab, RenderTexture, Scene, Sprite, SpriteAtlas, SpriteFrame, Texture2D, UIOpacity, UIRenderer, UITransform, warn, __private } from 'cc';
+import { Asset, assetManager, AssetManager, CCObject, Component, debug, director, errorID, ImageAsset, Material, misc, Node, NodeActivator, NodeEventType, path, Prefab, RenderTexture, Scene, Sprite, SpriteAtlas, SpriteFrame, Texture2D, UIOpacity, UIRenderer, UITransform, warn, __private, Vec2, Vec3, Rect, Canvas } from 'cc';
 import { DEBUG } from 'cc/env';
 import { decodeUuid } from '../ccutils/compressedUuid';
 import { getSetter } from '../ccutils/Super_Getter_Setter';
 import { asyncAsset } from '../mgr/asyncAsset';
 
 
-class EngineOverrider {
-    private static remoteSpriteFrameCache: { [key: string]: SpriteFrame } = {};//远程ImageAsset转换成SpriteFrame资源缓存字典
-    public static startWrite() {
+export class EngineOverrider {
+    //舞台上所有节点的字典
+    public static stageSubNodeDic: { [key: number]: Node } = {};
+    private static startWrite() {
         //新增API, 建议把API写进 or.d.ts 下的 interface Node 中,便于在使用时带自动提示功能
+        Node.hashCode = 0;
 
-        if (DEBUG) {
+        // if (DEBUG) {//DEBUG{} 中的代码仅限于控制台调试, 不要用在生产环境
+        Object.defineProperty(Node.prototype, "sprite", {
+            get: function () {
+                return this.getComponent(Sprite);
+            },
+            enumerable: true,
+            configurable: true
+        })
 
-            Object.defineProperty(Node.prototype, "sprite", {
-                get: function () {
-                    return this.getComponent(Sprite);
-                },
-                enumerable: true,
-                configurable: true
-            })
+        Object.defineProperty(Node.prototype, "spriteFrame", {
+            get: function () {
+                if (!this.getComponent(Sprite)) {
+                    //console.warn("本节点原本不存在Sprite组件 getter不会自动给节点添组件")
+                    return null;
+                }
+                return this.getComponent(Sprite).spriteFrame;
+            },
+            set: function (value) {
+                if (!this.getComponent(Sprite)) {
+                    console.warn("本节点原本不存在Sprite组件, 现在自动为其添加")
+                    this.addComponent(Sprite)
+                }
+                this.getComponent(Sprite).spriteFrame = value;
+            },
+            enumerable: true,
+            configurable: true
+        })
 
-            Object.defineProperty(Node.prototype, "spriteFrame", {
-                get: function () {
-                    if (!this.getComponent(Sprite)) {
-                        //console.warn("本节点原本不存在Sprite组件 getter不会自动给节点添组件")
-                        return null;
-                    }
-                    return this.getComponent(Sprite).spriteFrame;
-                },
-                set: function (value) {
-                    if (!this.getComponent(Sprite)) {
-                        console.warn("本节点原本不存在Sprite组件")
-                        this.addComponent(Sprite)
-                    }
-                    this.getComponent(Sprite).spriteFrame = value;
-                },
-                enumerable: true,
-                configurable: true
-            })
+        Object.defineProperty(Node.prototype, "texture", {
+            get: function () {
+                if (!this.getComponent(Sprite)) return null;
+                if (!this.getComponent(Sprite).spriteFrame) return null;
+                return this.getComponent(Sprite).spriteFrame.texture;
+            },
+            enumerable: true,
+            configurable: true
+        })
 
-            Object.defineProperty(Node.prototype, "texture", {
-                get: function () {
-                    if (!this.getComponent(Sprite)) return null;
-                    if (!this.getComponent(Sprite).spriteFrame) return null;
-                    return this.getComponent(Sprite).spriteFrame.texture;
-                },
-                enumerable: true,
-                configurable: true
-            })
+        globalThis["$cr"] = function (sf?: SpriteFrame): Node {
+            let newNode = new Node();
+            newNode.addComponent(Sprite).spriteFrame = sf;
+            return newNode;
+        }
+        //   }
 
-            globalThis["$cr"] = function (sf?: SpriteFrame): Node {
-                let newNode = new Node();
-                newNode.addComponent(Sprite).spriteFrame = sf;
-                return newNode;
+        let getname = Object.getOwnPropertyDescriptor(Node.prototype, "name").get;
+        Object.defineProperty(Node.prototype, "name", {
+            get: function () {
+                if (!this.hashCode) this.hashCode = ++Node.hashCode;
+                if (this.stage) {
+                    EngineOverrider.stageSubNodeDic[this.hashCode] = this;
+                }
+                return getname.call(this);
+            },
+            enumerable: true,
+            configurable: true
+        })
+
+        Node.prototype.contains = function (node) {
+            let parent = node;
+            while (parent.parent) {
+                parent = parent.parent;
+                if (this == parent) {
+                    return true;
+                }
             }
+            return false;
         }
 
         Object.defineProperty(Node.prototype, "stage", {
             get: function () {
+                if (!director.getScene()) return null;
                 let parent = this.parent;
                 while (parent && parent.parent) {
                     parent = parent.parent;
@@ -72,8 +98,6 @@ class EngineOverrider {
             enumerable: true,
             configurable: true
         })
-
-
 
 
         Object.defineProperty(Sprite.prototype, "asyncSpriteFrame", {
@@ -108,7 +132,7 @@ class EngineOverrider {
                                     spriteFrame.texture = texture;
                                     spriteFrame["$_$__remoteURL__"] = sfObject["$_$__remoteURL__"];
                                     spriteFrame._uuid = spriteFrame["$_$__remoteURL__"];
-                                    EngineOverrider.remoteSpriteFrameCache[sfObject["$_$__remoteURL__"]] = spriteFrame;
+                                    asyncAsset.remoteSpriteFrameCache[sfObject["$_$__remoteURL__"]] = spriteFrame;
                                 }
                                 if (_this.isValid) _this.spriteFrame = spriteFrame;
                                 delete _this._tempSpriteFrame;
@@ -126,6 +150,9 @@ class EngineOverrider {
                     }
                     else if (sfObject["bundle"] && sfObject["url"]) {// usingAssets配置资源      建议参数使用 usingAsset的配置
                         spriteFrame = await asyncAsset.bundleLoadOneAsset(sfObject["bundle"], sfObject["url"], SpriteFrame);
+                        if (spriteFrame && !spriteFrame.isValid) {
+                            spriteFrame = await asyncAsset.loadAny(spriteFrame.uuid, SpriteFrame);
+                        }
                         if (_this.isValid) _this.spriteFrame = spriteFrame;
                         delete _this._tempSpriteFrame;
                     }
@@ -139,6 +166,9 @@ class EngineOverrider {
                             delete _this._tempSpriteFrame;
                         }
                         else {
+                            if (spriteFrame && !spriteFrame.isValid) {
+                                spriteFrame = await asyncAsset.loadAny(spriteFrame.uuid, SpriteFrame);
+                            }
                             if (_this.isValid) _this.spriteFrame = spriteFrame;
                             delete _this._tempSpriteFrame;
                         }
@@ -146,13 +176,53 @@ class EngineOverrider {
                 }
                 else if (typeof sfObject == "string") {//uuid 或 url地址
                     if (sfObject.indexOf("://") == -1) {//这不是 url地址 那就当做uuid处理 压缩或未压缩的 uuid, asyncAsset.loadAny都会自动识和处理
-                        spriteFrame = await asyncAsset.loadAny(sfObject, SpriteFrame);
-                        if (_this.isValid) _this.spriteFrame = spriteFrame;
-                        delete _this._tempSpriteFrame;
+                        if (sfObject.indexOf("/") >= 0) {
+                            let urlArr = sfObject.split("/");
+                            let bundleName = urlArr.shift();
+                            let sfURL = urlArr.join("/");
+
+                            if (sfObject.indexOf(".plist/") >= 0) {//这是一个图集下的子纹理
+                                urlArr = sfURL.split(".plist/");
+                                let atlasURL = urlArr[0];
+                                let key = urlArr[1];
+
+                                let _atlas = await asyncAsset.bundleLoadOneAsset(bundleName, atlasURL, SpriteAtlas);
+                                if (_atlas && _atlas.spriteFrames) {
+                                    spriteFrame = _atlas.spriteFrames[key];
+                                }
+                                if (spriteFrame && !spriteFrame.isValid) {
+                                    spriteFrame = await asyncAsset.loadAny(spriteFrame.uuid, SpriteFrame);
+                                    _atlas.spriteFrames[key] = spriteFrame;
+                                }
+                                if (_this.isValid) _this.spriteFrame = spriteFrame;
+                            }
+                            else {
+                                let arr = sfURL.split(".");
+                                let suffix = arr.pop().toLowerCase();
+                                if (suffix == "png" || suffix == "jpg" || suffix == "webp") {
+                                    sfURL = arr.join(".");
+                                }
+                                    spriteFrame = await asyncAsset.bundleLoadOneAsset(bundleName, sfURL, SpriteFrame);
+                                if (spriteFrame && !spriteFrame.isValid) {
+                                    spriteFrame = await asyncAsset.loadAny(spriteFrame.uuid, SpriteFrame);
+                                }
+                                if (_this.isValid) _this.spriteFrame = spriteFrame;
+                            }
+
+                            delete _this._tempSpriteFrame;
+                        }
+                        else {
+                            spriteFrame = await asyncAsset.loadAny(sfObject, SpriteFrame);
+                            if (spriteFrame && !spriteFrame.isValid) {
+                                spriteFrame = await asyncAsset.loadAny(spriteFrame.uuid, SpriteFrame);
+                            }
+                            if (_this.isValid) _this.spriteFrame = spriteFrame;
+                            delete _this._tempSpriteFrame;
+                        }
                     }
                     else {
-                        if (EngineOverrider.remoteSpriteFrameCache[sfObject] && EngineOverrider.remoteSpriteFrameCache[sfObject].isValid) {
-                            spriteFrame = EngineOverrider.remoteSpriteFrameCache[sfObject];
+                        if (asyncAsset.remoteSpriteFrameCache[sfObject] && asyncAsset.remoteSpriteFrameCache[sfObject].isValid) {
+                            spriteFrame = asyncAsset.remoteSpriteFrameCache[sfObject];
                             if (_this.isValid) _this.spriteFrame = spriteFrame;
                             delete _this._tempSpriteFrame;
                         }
@@ -165,8 +235,9 @@ class EngineOverrider {
                                 texture.image = imageAsset;
                                 spriteFrame.texture = texture;
                                 spriteFrame["$_$__remoteURL__"] = sfObject;
-                                EngineOverrider.remoteSpriteFrameCache[sfObject] = spriteFrame;
+                                asyncAsset.remoteSpriteFrameCache[sfObject] = spriteFrame;
                             }
+
                             if (_this.isValid) _this.spriteFrame = spriteFrame;
                             delete _this._tempSpriteFrame;
                         }
@@ -249,6 +320,7 @@ class EngineOverrider {
 
         //检测Node之下有没有这个Component, 有的话直接返回Component的引用; 没有的话自动新增Component实例再返回其引用
         Node.prototype.directGetComponent = function <T extends Component>(componentType: new (...parmas) => T, ...args): T {
+            if (this instanceof Scene) return null;
             return this.getComponent.call(this, componentType) || this.addComponent.call(this, componentType, ...args);
         }
 
@@ -347,13 +419,33 @@ class EngineOverrider {
             return arr;
         }
 
+
+
         const node_setParent = Node.prototype.setParent;
         Node.prototype.setParent = function setParent(value, keepWorldTransform) {
             //不能用 if(this.scene)来判断是否在场景上 this.scene 不会随着节点的 加载/移除 发生改变
+
             let oldStage = this.stage;
             let newStage;
 
+
+
             node_setParent.call(this, value, keepWorldTransform);
+            if (!this.hashCode) { this.hashCode = ++Node.hashCode }
+            if (!oldStage && this.stage) {
+                EngineOverrider.stageSubNodeDic[this.hashCode] = this;
+                let list = this.getAllSubNodes();
+                for (let i = 0; i < list.length; i++) {
+                    EngineOverrider.stageSubNodeDic[list[i].hashCode] = list[i];
+                }
+            }
+            else if (!this.stage) {
+                delete EngineOverrider.stageSubNodeDic[this.hashCode];
+                let list = this.getAllSubNodes();
+                for (let i = 0; i < list.length; i++) {
+                    delete EngineOverrider.stageSubNodeDic[list[i].hashCode];
+                }
+            }
 
             newStage = this.stage;
 
@@ -399,6 +491,9 @@ class EngineOverrider {
         //绕开UIOpacity  直接通过赋值修改Node的opacity(不透明度)
         Object.defineProperty(Node.prototype, "opacity", {
             get: function () {
+                if (this instanceof Scene) {
+                    return 255;
+                }
                 //没有UIOpacity? 那就自动创建一个
                 return this.directGetComponent(UIOpacity).opacity;
             },
@@ -426,6 +521,9 @@ class EngineOverrider {
 
         Object.defineProperty(Node.prototype, "uiTransform", {
             get: function () {
+                if (this instanceof Scene) {
+                    return null;
+                }
                 //没有UITransform? 那就自动创建一个
                 return this.directGetComponent(UITransform);
             },
@@ -435,6 +533,9 @@ class EngineOverrider {
 
         Object.defineProperty(Node.prototype, "nodeWidth", {
             get: function () {
+                if (this instanceof Scene) {
+                    return NaN;
+                }
                 //没有UITransform? 那就自动创建一个
                 return this.directGetComponent(UITransform).width;
             },
@@ -449,6 +550,9 @@ class EngineOverrider {
 
         Object.defineProperty(Node.prototype, "nodeHeight", {
             get: function () {
+                if (this instanceof Scene) {
+                    return NaN;
+                }
                 //没有UITransform? 那就自动创建一个
                 return this.directGetComponent(UITransform).height;
             },
@@ -527,11 +631,118 @@ class EngineOverrider {
             configurable: true
         });
 
+        Node.prototype["getNodeByHashCode"] = function (hashCode: number) {
+            for (let c in this.children) {
+                if (this.children[c].hashCode == hashCode) {
+                    return this.children[c];
+                }
+            }
+
+            return null;
+        }
+
+
+        Node.prototype["getGlobalBounds"] = function (allSubNodes = false) {
+            //↓↓↓本来是这么写的 但是发现用在带Label的Button节点上有bug(目前版本3.7, 不知道官方以后是否会修复),  轮廓是从必定舞台中心开始的 也就是说 这Button只要不在舞台中心, 画出的轮廓肯定是偏大的
+            //return this.uiTransform.getBoundingBoxToWorld();  
+            if (this.parent && this.parent instanceof Scene) {
+                return this.uiTransform.getBoundingBoxToWorld();
+            }
+            //计算出node四个端点的世界坐标, 然后再计算出真实轮廓
+            let self: Node = this;
+            let bound: Rect = self.uiTransform.getBoundingBox();
+
+            let p1 = self.parent.uiTransform.convertToWorldSpaceAR(new Vec3(bound.x, bound.y, 0));
+            let p2 = self.parent.uiTransform.convertToWorldSpaceAR(new Vec3(bound.x + bound.width, bound.y, 0));
+            let p3 = self.parent.uiTransform.convertToWorldSpaceAR(new Vec3(bound.x + bound.width, bound.y + bound.height, 0));
+            let p4 = self.parent.uiTransform.convertToWorldSpaceAR(new Vec3(bound.x, bound.y + bound.height, 0));
+            let points: Vec3[] = [p1, p2, p3, p4];
+            if (allSubNodes) {//连子节点的轮廓也算进去
+                let subNods = self.getAllSubNodes();
+                for (let i = 0; i < subNods.length; i++) {
+                    let _bound = subNods[i].uiTransform.getBoundingBox();
+                    let _p1 = subNods[i].parent.uiTransform.convertToWorldSpaceAR(new Vec3(_bound.x, _bound.y, 0));
+                    let _p2 = subNods[i].parent.uiTransform.convertToWorldSpaceAR(new Vec3(_bound.x + _bound.width, _bound.y, 0));
+                    let _p3 = subNods[i].parent.uiTransform.convertToWorldSpaceAR(new Vec3(_bound.x + _bound.width, _bound.y + _bound.height, 0));
+                    let _p4 = subNods[i].parent.uiTransform.convertToWorldSpaceAR(new Vec3(_bound.x, _bound.y + _bound.height, 0));
+                    points.push(_p1, _p2, _p3, _p4)
+                }
+            }
+
+            //重新计算上下左右的世界坐标(如果有旋转或翻转, 会导致四个端点的世界坐标偏移)
+
+            let left = p1;
+            let top = p1;
+            let right = p1;
+            let bottom = p1;
+
+            for (let i = 1; i < points.length; i++) {
+                if (left.x > points[i].x) {
+                    left = points[i];
+                }
+
+                if (top.y < points[i].y) {
+                    top = points[i];
+                }
+
+                if (right.x < points[i].x) {
+                    right = points[i];
+                }
+
+                if (bottom.y > points[i].y) {
+                    bottom = points[i];
+                }
+            }
+
+            //let rect = new Rect(left.x, bottom.y, 1,2)
+            bound.x = left.x;
+            bound.y = bottom.y;
+            bound.width = right.x - left.x;
+            bound.height = top.y - bottom.y;
+
+            return bound;
+        }
 
         //关于纹理集和子纹理的关系  主要体现在 SpriteAtlas 与 SpriteFrame
         //首先 SpriteFrame 的字段 name 就是 SpriteAtlas在资源库里的命名 , 而不是子纹理的命名
         //其次 SpriteFrame的uuid格式 就是 SpriteAtlas的uuid + @后缀    例如 SpriteFrame的uuid是e80e626f-66d8-47ed-afd6-a74a52d53b22@6c48a   那么SpriteAtlas的uuid就是去掉@6c48a后的 e80e626f-66d8-47ed-afd6-a74a52d53b22
 
+        Object.defineProperty(Node.prototype, "gl_active", {
+            get: function () {
+                if (!this.active) return false;
+                let parent = this;
+                while (parent.parent && parent.parent != director.getScene()) {
+                    parent = parent.parent;
+                    if (!parent.active) {
+                        return false;
+                    }
+                }
+                return true;
+            },
+
+            enumerable: true,
+            configurable: true
+        });
+
+        Object.defineProperty(Node.prototype, "gl_opacity", {
+            get: function () {
+                if (this instanceof Scene) return 255;
+                let opacity = this.opacity;
+                if (opacity == 0) return 0;
+                let parent = this;
+                while (parent.parent && parent.parent != director.getScene()) {
+                    parent = parent.parent;
+                    opacity *= (parent.opacity / 255);
+                    if (opacity == 0) {
+                        return 0;
+                    }
+                }
+                return opacity;
+            },
+
+            enumerable: true,
+            configurable: true
+        });
 
 
         //覆盖 让 bundle.get("图片路径", SpriteFrame) 或 bundle.get("图片路径", Texture2D), 填入第二个具体类型参数时  返回一个 SpriteFrame 或 Texture2D,  而不是 ImageAsset
@@ -599,11 +810,19 @@ class EngineOverrider {
             return sprite_destroy.call(this);
         }
 
+        let assetManager_remove = assetManager.assets.remove;
+        assetManager.assets.remove = function (key: string): Asset {
+            if (asyncAsset.remoteSpriteFrameCache[key]) {
+                asyncAsset.remoteSpriteFrameCache[key].destroy();//当assetManager.assets删除远程加载的缓存资源时, asyncAsset中如果有对应的spriteFrame, 也一并销毁
+            }
+            return assetManager_remove.call(this, key);
+        }
+
         let spriteFrame_destroy = SpriteFrame.prototype.destroy;
         SpriteFrame.prototype.destroy = function (): boolean {
             let key = "";
             if (this["$_$__remoteURL__"]) {
-                key = "EngineOverrider.remoteSpriteFrameCache['" + this["$_$__remoteURL__"] + "']";
+                key = "asyncAsset.remoteSpriteFrameCache['" + this["$_$__remoteURL__"] + "']";
             }
             else {
                 key = "cc.assetManager.assets.get('" + this._uuid + "')";
@@ -628,11 +847,11 @@ class EngineOverrider {
                 this["$_$__spriteDic__"] = null;
                 this["_ref"] = 0;
             } */
-            if (this["uuid"] !== undefined && EngineOverrider.remoteSpriteFrameCache[this["uuid"]]) {//从本地缓存库移除
-                delete EngineOverrider.remoteSpriteFrameCache[this["uuid"]];
+            if (this["uuid"] !== undefined && asyncAsset.remoteSpriteFrameCache[this["uuid"]]) {//从本地缓存库移除
+                delete asyncAsset.remoteSpriteFrameCache[this["uuid"]];
             }
-            if (this["$_$__remoteURL__"] !== undefined && EngineOverrider.remoteSpriteFrameCache[this["$_$__remoteURL__"]]) {//从本地缓存库移除
-                delete EngineOverrider.remoteSpriteFrameCache[this["$_$__remoteURL__"]];
+            if (this["$_$__remoteURL__"] !== undefined && asyncAsset.remoteSpriteFrameCache[this["$_$__remoteURL__"]]) {//从本地缓存库移除
+                delete asyncAsset.remoteSpriteFrameCache[this["$_$__remoteURL__"]];
                 this._uuid = this["$_$__remoteURL__"];//creator的清理内存机制会在destroy之后,异步清空白名单以外的字段  _uuid字段则在白名单之内
             }
             return spriteFrame_destroy.call(this);
@@ -648,17 +867,30 @@ class EngineOverrider {
                 this["$_$__spriteDic__"] = null;
                 this["_ref"] = 0;
             }
-            if (this["uuid"] !== undefined && EngineOverrider.remoteSpriteFrameCache[this["uuid"]]) {//从本地缓存库移除
-                delete EngineOverrider.remoteSpriteFrameCache[this["uuid"]];
+            if (this["uuid"] !== undefined && asyncAsset.remoteSpriteFrameCache[this["uuid"]]) {//从本地缓存库移除
+                delete asyncAsset.remoteSpriteFrameCache[this["uuid"]];
             }
-            if (this["$_$__remoteURL__"] !== undefined && EngineOverrider.remoteSpriteFrameCache[this["$_$__remoteURL__"]]) {//从本地缓存库移除
-                delete EngineOverrider.remoteSpriteFrameCache[this["$_$__remoteURL__"]];
+            if (this["$_$__remoteURL__"] !== undefined && asyncAsset.remoteSpriteFrameCache[this["$_$__remoteURL__"]]) {//从本地缓存库移除
+                delete asyncAsset.remoteSpriteFrameCache[this["$_$__remoteURL__"]];
                 this._uuid = this["$_$__remoteURL__"];//creator的清理内存机制会在destroy之后,异步清空白名单以外的字段  _uuid字段则在白名单之内
             }
 
             return spriteFrame_destroy.call(this);
         }
 
+        Node.prototype.getAllSubNodes = function () {
+            let list = [];
+            function getSub(node: Node) {
+                if (node && node.children && node.children.length > 0) {
+                    list = list.concat(node.children);
+                    for (let i = 0; i < node.children.length; i++) {
+                        getSub(node.children[i]);
+                    }
+                }
+            }
+            getSub(this);
+            return list;
+        }
 
         let node_destroy = Node.prototype.destroy;
         //销毁节点时,顺带销毁节点上的Sprite组件, 触发组件的引用计数变更
@@ -668,6 +900,13 @@ class EngineOverrider {
                 let sprite = this.getComponent(Sprite);
                 if (sprite) {
                     sprite.destroy();
+                }
+            }
+            if (this.hashCode) {
+                delete EngineOverrider.stageSubNodeDic[this.hashCode];
+                let list = this.getAllSubNodes();
+                for (let i = 0; i < list.length; i++) {
+                    delete EngineOverrider.stageSubNodeDic[list[i].hashCode];
                 }
             }
             return node_destroy.call(this);
@@ -724,13 +963,15 @@ class EngineOverrider {
 
                 if (!sf["$_$__activeRef__"]) sf["$_$__activeRef__"] = 0;
                 if (!sf["$_$__activeDic__"]) sf["$_$__activeDic__"] = {};
-                if (this.node.active && !sf["$_$__activeDic__"][this.uuid]) {
-                    sf["$_$__activeRef__"]++;
-                    sf["$_$__activeDic__"][this.uuid] = 1;
-                }
-                else if (!this.node.active && sf["$_$__activeDic__"][this.uuid]) {
-                    sf["$_$__activeRef__"]--;
-                    delete sf["$_$__activeDic__"][this.uuid];
+                if (this.node) {
+                    if (this.node.active && !sf["$_$__activeDic__"][this.uuid]) {
+                        sf["$_$__activeRef__"]++;
+                        sf["$_$__activeDic__"][this.uuid] = 1;
+                    }
+                    else if (!this.node.active && sf["$_$__activeDic__"][this.uuid]) {
+                        sf["$_$__activeRef__"]--;
+                        delete sf["$_$__activeDic__"][this.uuid];
+                    }
                 }
             }
             ///=↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑新增↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
@@ -803,8 +1044,6 @@ class EngineOverrider {
                         delete oldFrame["$_$__prefabDic__"][this["$_$__prefabSprite__"]];
                     }
                 }
-
-
             }
             if (spriteFrame) {
                 if (!spriteFrame["$_$__spriteRef__"]) spriteFrame["$_$__spriteRef__"] = 0;
@@ -823,7 +1062,7 @@ class EngineOverrider {
 
                 if (!spriteFrame["$_$__activeRef__"]) spriteFrame["$_$__activeRef__"] = 0;
                 if (!spriteFrame["$_$__activeDic__"]) spriteFrame["$_$__activeDic__"] = {};
-                if (this.node.active && !spriteFrame["$_$__activeDic__"][this.uuid]) {
+                if (this.node && this.node.active && !spriteFrame["$_$__activeDic__"][this.uuid]) {
                     spriteFrame["$_$__activeRef__"]++;
                     spriteFrame["$_$__activeDic__"][this.uuid] = 1;
                 }
@@ -858,6 +1097,8 @@ class EngineOverrider {
                 }
             }
         }
+
+
 
         /* let scene_activate = Scene.prototype["_activate"];
         Scene.prototype["_activate"] = function () {
@@ -901,9 +1142,9 @@ class EngineOverrider {
 
     }
 }
-if (EngineOverrider.startWrite) {
-    EngineOverrider.startWrite();
-    EngineOverrider.startWrite = null;//执行完一次后置空 不再重复覆盖
+if (EngineOverrider["startWrite"]) {
+    EngineOverrider["startWrite"]();
+    EngineOverrider["startWrite"] = null;//执行完一次后置空 不再重复覆盖
 }
 
 

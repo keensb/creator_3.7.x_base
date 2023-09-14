@@ -1,6 +1,7 @@
 import { DEBUG } from "cc/env";
-import { AssetManager, assetManager, Asset, SpriteFrame, Texture2D } from "cc";
-import { usingAssets, usingBundles } from "../config/usingAssets";
+import { AssetManager, assetManager, Asset, SpriteFrame, Texture2D, ImageAsset } from "cc";
+import { usingAssets, usingBundles } from "../../config/usingAssets";
+import { EngineOverrider } from "../overwrite/EngineOverrider";
 
 //傻瓜式用法 let res = await asyncAsset.loadOneBundle("bundleName", "资源在bundle文件夹件里的路径", cc类型列如SpriteFrame); 自动先搜索或加载bundle 再搜索或加载资源 然后返回
 
@@ -12,6 +13,8 @@ import { usingAssets, usingBundles } from "../config/usingAssets";
 */
 
 class AsyncAsset {
+    public static remoteSpriteFrameCache: { [key: string]: SpriteFrame } = {};//远程ImageAsset转换成SpriteFrame资源缓存字典
+
     /**
      * 通过异步队列的方式加载一个分包 bundle , 第二个参数的用途是: 询问是否在加载bundle的同时, 顺便把该bundle下的所有子资源都一并加载了
      */
@@ -203,6 +206,12 @@ class AsyncAsset {
      *  让一个 AssetManager.bundle 对象加载在其主文件夹下的某个资源
      *  (注意:第二个参数不要带后缀名 例如 aaa/bbb.json 只要写 "aaa/bbb"就好)
      *  3.x的巨坑: 如果加载的是图片资源 例如 aa/bb/img.jpg   要写成 "aa/bb/img/spriteFrame"(加载出来的是SpriteFrame对象) 或 "aa/bb/img/texture"(加载出来的是Texture2D对象) 直接写 "aa/bb/img" 加载出来的是不伦不类的 ImageAsset 对象
+     * 最后随便一提 SpriteFrame使用ImageAsset的方法:
+        let imageAsset = res as ImageAsset;
+        let spriteFrame = new SpriteFrame();
+        let texture = new Texture2D();
+        texture.image = imageAsset;
+        spriteFrame.texture = texture;
      */
     public static async bundleLoadOneAsset<T extends Asset>(bundle: AssetManager.Bundle | string, urlObj: string | { url: string }, assetType?: new (...args) => T): Promise<T>;
     public static async bundleLoadOneAsset<T extends Asset>(bundle: AssetManager.Bundle | string, urlObj: string | { url: string }, onComplete?: (res) => void): Promise<T>;
@@ -280,7 +289,7 @@ class AsyncAsset {
                     resolve(res);
                 }
                 else {
-                    console.warn("资源不存在, 请检查路径bundle " + _bundle.name + "所在路径" + _bundle.base + "下是否存在文件路径" + resUrl);//如果不存在,那多半是用错bundle或bundle路径了
+                    console.warn("资源不存在, 请检查路径bundle " + _bundle.name + "所在路径" + _bundle.base + "下是否存在文件路径" + resUrl, "另外提醒一下:文件路径要去除后缀名 例如去掉 '.png'、'.plist'、'.json'(通过creator IDE的 '复制并打印 URL' 命令获得的URL可能是带后缀名的) ");//如果不存在,那多半是用错bundle或bundle路径了
                     if (onComplete) {
                         onComplete(res);
                     }
@@ -311,12 +320,28 @@ class AsyncAsset {
     */
 
     //从远程加载资源  不要指定类型 会容易报错的  例如 加载远程图片默认是 ImageAsset类型, 强制指定 SpriteFrame 就会报错了
+    /**
+        关于加载远程图片到本地, 然后转成sprieFrame并写进缓存的方法(不用关系释放问题, 当执行 spriteFrame.destroy 的时候会自动从 asyncAsset.remoteSpriteFrameCache移除)
+        asyncAsset.loadOneRemote("http://172.16.70.32:5050/xxx.png", (data) => {
+            if (data) {
+                let imageAsset = data as ImageAsset;
+                let spriteFrame = new SpriteFrame();
+                let texture = new Texture2D();
+                texture.image = imageAsset;
+                spriteFrame.texture = texture;
+                spriteFrame["$_$__remoteURL__"] = data["$_$__remoteURL__"];
+                spriteFrame._uuid = spriteFrame["$_$__remoteURL__"];
+                asyncAsset.remoteSpriteFrameCache[data["$_$__remoteURL__"]] = spriteFrame;
+            }
+        })
+     */
+
     public static async loadOneRemote(url: string, onComplete?: (res?: Asset) => void): Promise<Asset> {
         return new Promise<Asset>(resolve => {
             let _res = assetManager.assets.get(url);
             if (_res && !_res.isValid) {//此资源存在于缓存中, 但是已经被销毁不可重用
                 assetManager.releaseAsset(_res);//解除依赖关系 并从缓存字典中移除
-                assetManager.assets.remove(url);;
+                assetManager.assets.remove(url);
             }
             assetManager.loadRemote(url, { cacheAsset: false }, (err, asset) => {
                 if (err) {
@@ -334,6 +359,43 @@ class AsyncAsset {
         });
     }
 
+    //从远程加载图片并缓存为纹理
+    public static async loadOneRemoteSpriteFrame(url: string, onComplete?: (res?: SpriteFrame) => void): Promise<SpriteFrame> {
+        return new Promise<SpriteFrame>(resolve => {
+            if (asyncAsset.remoteSpriteFrameCache[url]) {
+                if (onComplete) {
+                    onComplete(asyncAsset.remoteSpriteFrameCache[url]);//获取最后一个资源 
+                }
+                resolve(asyncAsset.remoteSpriteFrameCache[url]);
+            }
+            else {
+                asyncAsset.loadOneRemote(url, (data) => {
+                    if (!data) {
+                        console.info("加载远程资源 " + url + " 失败!");
+                    }
+                    else {
+                        let imageAsset = data as ImageAsset;
+                        let spriteFrame = new SpriteFrame();
+                        let texture = new Texture2D();
+                        texture.image = imageAsset;
+                        spriteFrame.texture = texture;
+                        spriteFrame["$_$__remoteURL__"] = data["$_$__remoteURL__"];
+                        spriteFrame._uuid = spriteFrame["$_$__remoteURL__"];
+                        asyncAsset.remoteSpriteFrameCache[data["$_$__remoteURL__"]] = spriteFrame;
+                        if (onComplete) {
+                            onComplete(spriteFrame);//获取最后一个资源 
+                        }
+                        resolve(spriteFrame);
+                    }
+                    
+                })
+            }
+        });
+    }
+
+
+
+    //从远程加载一个或一组资源
     public static async loadRemotes(urlObject: string | string[], onProgress?: (finished?: number, total?: number, currentRes?: Asset) => void, onComplete?: (resList?: Asset[]) => void): Promise<Asset[]> {
         return new Promise<Asset[]>(resolve => {
             let urlArr: string[] = [];
@@ -345,7 +407,7 @@ class AsyncAsset {
                 let _res = assetManager.assets.get(url);
                 if (_res && !_res.isValid) {//此资源存在于缓存中, 但是已经被销毁不可重用
                     assetManager.releaseAsset(_res);//解除依赖关系 并从缓存字典中移除
-                    assetManager.assets.remove(url);;
+                    assetManager.assets.remove(url);
                 }
                 assetManager.loadRemote(url, { cacheAsset: false }, (err, asset: Asset) => {
                     if (err != undefined) {

@@ -1,6 +1,7 @@
 import { MainEntry } from "./../script/MainEntry";
 import { Scene2 } from "./../script/Scene2";
-import { alignMgr } from "./../script/ccutils/alignMgr";
+import { alignMgr } from "./develop/ccutils/alignMgr";
+
 
 
 export class ClassDictionary {

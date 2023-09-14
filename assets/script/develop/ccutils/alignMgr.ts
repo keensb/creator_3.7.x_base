@@ -1,4 +1,4 @@
-import { Layout, Node, Widget, screen, UITransform, v3, Canvas, find, view, director, assetManager } from "cc";
+import { Layout, Node, Widget, screen, UITransform, v3, Canvas, find, view, director, assetManager, Rect } from "cc";
 import { DEBUG } from "cc/env";
 
 export enum alignType {
@@ -26,7 +26,6 @@ export class alignMgr {
         isIpad: Boolean(navigator.userAgent.match(/ipad/ig)),
         isWeixin: Boolean(navigator.userAgent.match(/MicroMessenger/ig)),
     }
-
 
     /**
      * 让某个节点自适其节点下的内容， 并获取当前真实宽高(注意：该节点必须是没有挂载 layout的节点,并且其子节点都没有挂载 widget)
@@ -188,11 +187,11 @@ export class alignMgr {
      * 让节点1的左侧边缘主动贴近节点2的左侧边缘处(左对齐), (节点1不能是节点2的父级节点  因为父级无法向子级对齐(父级移动子级也会跟着移动) 并且节点1没有被 Widget 所约束)
      * 第三个参数的意思是启用递归scale判断
      */
-    public static leftToLeft(node1: Node, refObj: Node | number, getParentWorldScale = true): void {
-        let n1w = node1.uiTransform.getBoundingBoxToWorld();
-        let n2w: any = refObj instanceof Node ? refObj.uiTransform.getBoundingBoxToWorld() : refObj;
+    public static leftToLeft(node1: Node, refObj: Node | Rect | number, getParentWorldScale = true): void {
+        let n1w = node1.getGlobalBounds();
+        let n2w: any = refObj instanceof Node ? refObj.getGlobalBounds() : refObj;
         let left1 = n1w.x;
-        let left2 = n2w.x | n2w;
+        let left2 = n2w.x || n2w;
 
         let scaleX = 1;
         if (getParentWorldScale) {
@@ -210,11 +209,11 @@ export class alignMgr {
      * 让节点1的左侧边缘主动贴近节点2的右侧边缘处(接合), (节点1不能是节点2的父级节点  因为父级无法向子级对齐(父级移动子级也会跟着移动) 并且节点1没有被 Widget 所约束)
      * 第三个参数的意思是启用递归scale判断
      */
-    public static leftToRight(node1: Node, refObj: Node | number, getParentWorldScale = true): void {
-        let n1w = node1.uiTransform.getBoundingBoxToWorld();
-        let n2w: any = refObj instanceof Node ? refObj.uiTransform.getBoundingBoxToWorld() : refObj;
+    public static leftToRight(node1: Node, refObj: Node | Rect | number, getParentWorldScale = true): void {
+        let n1w = node1.getGlobalBounds();
+        let n2w: any = refObj instanceof Node ? refObj.getGlobalBounds() : refObj;
         let left = n1w.x;
-        let right = n2w.x + n2w.width | n2w;
+        let right = n2w.x + n2w.width || n2w;
 
         let scaleX = 1;
         if (getParentWorldScale) {
@@ -231,11 +230,11 @@ export class alignMgr {
      * 让节点1的右侧边缘主动贴近节点2的右侧边缘处(右对齐), (节点1不能是节点2的父级节点  因为父级无法向子级对齐(父级移动子级也会跟着移动) 并且节点1没有被 Widget 所约束)
      * 第三个参数的意思是启用递归scale判断
      */
-    public static rightToRight(node1: Node, refObj: Node | number, getParentWorldScale = true): void {
-        let n1w = node1.uiTransform.getBoundingBoxToWorld();
-        let n2w: any = refObj instanceof Node ? refObj.uiTransform.getBoundingBoxToWorld() : refObj;
+    public static rightToRight(node1: Node, refObj: Node | Rect | number, getParentWorldScale = true): void {
+        let n1w = node1.getGlobalBounds();
+        let n2w: any = refObj instanceof Node ? refObj.getGlobalBounds() : refObj;
         let right1 = n1w.x + n1w.width;
-        let right2 = n2w.x + n2w.width | n2w;
+        let right2 = n2w.x + n2w.width || n2w;
 
         let scaleX = 1;
         if (getParentWorldScale) {
@@ -252,11 +251,11 @@ export class alignMgr {
      * 让节点1的右侧边缘主动贴近节点2的左侧边缘处(接合), (节点1不能是节点2的父级节点  因为父级无法向子级对齐(父级移动子级也会跟着移动) 并且节点1没有被 Widget 所约束)
      * 第三个参数的意思是启用递归scale判断
      */
-    public static rightToLeft(node1: Node, refObj: Node | number, getParentWorldScale = true): void {
-        let n1w = node1.uiTransform.getBoundingBoxToWorld();
-        let n2w: any = refObj instanceof Node ? refObj.uiTransform.getBoundingBoxToWorld() : refObj;
+    public static rightToLeft(node1: Node, refObj: Node | Rect | number, getParentWorldScale = true): void {
+        let n1w = node1.getGlobalBounds();
+        let n2w: any = refObj instanceof Node ? refObj.getGlobalBounds() : refObj;
         let left = n2w.x;
-        let right = n1w.x + n1w.width | n2w;
+        let right = n1w.x + n1w.width || n2w;
 
         let scaleX = 1;
         if (getParentWorldScale) {
@@ -273,14 +272,14 @@ export class alignMgr {
      * 让节点1的水平中心与节点2的水平中心重合, (节点1不能是节点2的父级节点  因为父级无法向子级对齐(父级移动子级也会跟着移动) 并且节点1没有被 Widget 所约束)
      * 第三个参数的意思是启用递归scale判断
      */
-    public static hCenterToCenter(node1: Node, refObj: Node | number, getParentWorldScale = true): void {
+    public static hCenterToCenter(node1: Node, refObj: Node | Rect | number, getParentWorldScale = true): void {
         alignMgr.leftToLeft(node1, refObj, getParentWorldScale);
-        let n1w = node1.uiTransform.getBoundingBoxToWorld();
-        let n2w: any = refObj instanceof Node ? refObj.uiTransform.getBoundingBoxToWorld() : refObj;
+        let n1w = node1.getGlobalBounds();
+        let n2w: any = refObj instanceof Node ? refObj.getGlobalBounds() : refObj;
 
 
         let center1 = n1w.x + n1w.width / 2;
-        let center2 = n2w.x + n2w.width / 2 | n2w;
+        let center2 = n2w.x + n2w.width / 2 || n2w;
 
         let scaleX = 1;
         if (getParentWorldScale) {
@@ -298,13 +297,13 @@ export class alignMgr {
      * 让节点1的水平中心与节点2的水平中心重合, (节点1不能是节点2的父级节点  因为父级无法向子级对齐(父级移动子级也会跟着移动) 并且节点1没有被 Widget 所约束)
      * 第三个参数的意思是启用递归scale判断
      */
-    public static vCenterToCenter(node1: Node, refObj: Node | number, getParentWorldScale = true): void {
+    public static vCenterToCenter(node1: Node, refObj: Node | Rect | number, getParentWorldScale = true): void {
         alignMgr.bottomToBottom(node1, refObj, getParentWorldScale);
-        let n1w = node1.uiTransform.getBoundingBoxToWorld();
-        let n2w: any = refObj instanceof Node ? refObj.uiTransform.getBoundingBoxToWorld() : refObj;
+        let n1w = node1.getGlobalBounds();
+        let n2w: any = refObj instanceof Node ? refObj.getGlobalBounds() : refObj;
 
         let center1 = n1w.y + n1w.height / 2;
-        let center2 = n2w.y + n2w.height / 2 | n2w;
+        let center2 = n2w.y + n2w.height / 2 || n2w;
 
         let scaleY = 1;
         if (getParentWorldScale) {
@@ -325,11 +324,11 @@ export class alignMgr {
      * 让节点1的顶端边缘主动贴近节点2的顶端边缘处(顶对齐), (节点1不能是节点2的父级节点  因为父级无法向子级对齐(父级移动子级也会跟着移动) 并且节点1没有被 Widget 所约束)
      * 第三个参数的意思是启用递归scale判断
      */
-    public static topToTop(node1: Node, refObj: Node | number, getParentWorldScale = true): void {
-        let n1w = node1.uiTransform.getBoundingBoxToWorld();
-        let n2w: any = refObj instanceof Node ? refObj.uiTransform.getBoundingBoxToWorld() : refObj;
+    public static topToTop(node1: Node, refObj: Node | Rect | number, getParentWorldScale = true): void {
+        let n1w = node1.getGlobalBounds();
+        let n2w: any = refObj instanceof Node ? refObj.getGlobalBounds() : refObj;
         let top1 = n1w.y + n1w.height;
-        let top2 = n2w.y + n2w.height | n2w;
+        let top2 = n2w.y + n2w.height || n2w;
 
         let scaleY = 1;
         if (getParentWorldScale) {
@@ -346,11 +345,11 @@ export class alignMgr {
      * 让节点1的顶端边缘主动贴近节点2的底端边缘处(接合), (节点1不能是节点2的父级节点  因为父级无法向子级对齐(父级移动子级也会跟着移动) 并且节点1没有被 Widget 所约束)
      * 第三个参数的意思是启用递归scale判断
      */
-    public static topToBottom(node1: Node, refObj: Node | number, getParentWorldScale = true): void {
-        let n1w = node1.uiTransform.getBoundingBoxToWorld();
-        let n2w: any = refObj instanceof Node ? refObj.uiTransform.getBoundingBoxToWorld() : refObj;
+    public static topToBottom(node1: Node, refObj: Node | Rect | number, getParentWorldScale = true): void {
+        let n1w = node1.getGlobalBounds();
+        let n2w: any = refObj instanceof Node ? refObj.getGlobalBounds() : refObj;
         let top = n1w.y + n1w.height;
-        let bottom = n2w.y | n2w;
+        let bottom = n2w.y || n2w;
 
         let scaleY = 1;
         if (getParentWorldScale) {
@@ -368,11 +367,11 @@ export class alignMgr {
      * 让节点1的底端边缘主动贴近节点2的底端边缘处(底对齐), (节点1不能是节点2的父级节点  因为父级无法向子级对齐(父级移动子级也会跟着移动) 并且节点1没有被 Widget 所约束)
      * 第三个参数的意思是启用递归scale判断
      */
-    public static bottomToBottom(node1: Node, refObj: Node | number, getParentWorldScale = true): void {
-        let n1w = node1.uiTransform.getBoundingBoxToWorld();
-        let n2w: any = refObj instanceof Node ? refObj.uiTransform.getBoundingBoxToWorld() : refObj;
+    public static bottomToBottom(node1: Node, refObj: Node | Rect | number, getParentWorldScale = true): void {
+        let n1w = node1.getGlobalBounds();
+        let n2w: any = refObj instanceof Node ? refObj.getGlobalBounds() : refObj;
         let bottom1 = n1w.y;
-        let bottom2 = n2w.y | n2w;
+        let bottom2 = n2w.y || n2w;
 
         let scaleY = 1;
         if (getParentWorldScale) {
@@ -390,11 +389,11 @@ export class alignMgr {
      * 让节点1的底端边缘主动贴近节点2的顶端边缘处(接合), (节点1不能是节点2的父级节点  因为父级无法向子级对齐(父级移动子级也会跟着移动) 并且节点1没有被 Widget 所约束)
      * 第三个参数的意思是启用递归scale判断
      */
-    public static bottomToTop(node1: Node, refObj: Node | number, getParentWorldScale = true): void {
-        let n1w = node1.uiTransform.getBoundingBoxToWorld();
-        let n2w: any = refObj instanceof Node ? refObj.uiTransform.getBoundingBoxToWorld() : refObj;
+    public static bottomToTop(node1: Node, refObj: Node | Rect | number, getParentWorldScale = true): void {
+        let n1w = node1.getGlobalBounds();
+        let n2w: any = refObj instanceof Node ? refObj.getGlobalBounds() : refObj;
         let bottom = n1w.y;
-        let top = n2w.y + n2w.height | n2w;
+        let top = n2w.y + n2w.height || n2w;
 
         let scaleY = 1;
         if (getParentWorldScale) {
@@ -493,7 +492,7 @@ export class alignMgr {
      */
     public static alignToFrameSize(node: Node, alignTypeNum: alignType): void {
 
-        
+
         let canvas = director.getScene().getComponentInChildren(Canvas);
         if (!canvas) return;
 
@@ -509,7 +508,7 @@ export class alignMgr {
         }
         newNode.uiTransform.setContentSize(newNode.parent.uiTransform.width, newNode.parent.uiTransform.height);
 
-    
+
 
         //水平方向的对齐同时只有1种能生效
         if (alignTypeNum & alignType.LEFT_TO_LEFT) {
@@ -544,7 +543,7 @@ export class alignMgr {
         else if (alignTypeNum & alignType.H_CENTER_TO_CENTER) {
             alignMgr.hCenterToCenter(node, newNode, true);
         }
-        
+
         newNode.parent = null;
         newNode.destroy();
     }
