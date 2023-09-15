@@ -11,56 +11,56 @@ import { asyncAsset } from '../mgr/asyncAsset';
 
 
 export class EngineOverrider {
-    //舞台上所有节点的字典
+    //场景里所有节点的字典
     public static stageSubNodeDic: { [key: number]: Node } = {};
     private static startWrite() {
         //新增API, 建议把API写进 or.d.ts 下的 interface Node 中,便于在使用时带自动提示功能
         Node.hashCode = 0;
 
-        // if (DEBUG) {//DEBUG{} 中的代码仅限于控制台调试, 不要用在生产环境
-        Object.defineProperty(Node.prototype, "sprite", {
-            get: function () {
-                return this.getComponent(Sprite);
-            },
-            enumerable: true,
-            configurable: true
-        })
+        if (DEBUG) {//DEBUG{} 中的代码仅限于控制台调试, 不要用在生产环境
+            Object.defineProperty(Node.prototype, "sprite", {
+                get: function () {
+                    return this.getComponent(Sprite);
+                },
+                enumerable: true,
+                configurable: true
+            })
 
-        Object.defineProperty(Node.prototype, "spriteFrame", {
-            get: function () {
-                if (!this.getComponent(Sprite)) {
-                    //console.warn("本节点原本不存在Sprite组件 getter不会自动给节点添组件")
-                    return null;
-                }
-                return this.getComponent(Sprite).spriteFrame;
-            },
-            set: function (value) {
-                if (!this.getComponent(Sprite)) {
-                    console.warn("本节点原本不存在Sprite组件, 现在自动为其添加")
-                    this.addComponent(Sprite)
-                }
-                this.getComponent(Sprite).spriteFrame = value;
-            },
-            enumerable: true,
-            configurable: true
-        })
+            Object.defineProperty(Node.prototype, "spriteFrame", {
+                get: function () {
+                    if (!this.getComponent(Sprite)) {
+                        //console.warn("本节点原本不存在Sprite组件 getter不会自动给节点添组件")
+                        return null;
+                    }
+                    return this.getComponent(Sprite).spriteFrame;
+                },
+                set: function (value) {
+                    if (!this.getComponent(Sprite)) {
+                        console.warn("本节点原本不存在Sprite组件, 现在自动为其添加")
+                        this.addComponent(Sprite)
+                    }
+                    this.getComponent(Sprite).spriteFrame = value;
+                },
+                enumerable: true,
+                configurable: true
+            })
 
-        Object.defineProperty(Node.prototype, "texture", {
-            get: function () {
-                if (!this.getComponent(Sprite)) return null;
-                if (!this.getComponent(Sprite).spriteFrame) return null;
-                return this.getComponent(Sprite).spriteFrame.texture;
-            },
-            enumerable: true,
-            configurable: true
-        })
+            Object.defineProperty(Node.prototype, "texture", {
+                get: function () {
+                    if (!this.getComponent(Sprite)) return null;
+                    if (!this.getComponent(Sprite).spriteFrame) return null;
+                    return this.getComponent(Sprite).spriteFrame.texture;
+                },
+                enumerable: true,
+                configurable: true
+            })
 
-        globalThis["$cr"] = function (sf?: SpriteFrame): Node {
-            let newNode = new Node();
-            newNode.addComponent(Sprite).spriteFrame = sf;
-            return newNode;
-        }
-        //   }
+            globalThis["$cr"] = function (sf?: SpriteFrame): Node {
+                let newNode = new Node();
+                newNode.addComponent(Sprite).spriteFrame = sf;
+                return newNode;
+            }
+        }// end - if (Debug)
 
         let getname = Object.getOwnPropertyDescriptor(Node.prototype, "name").get;
         Object.defineProperty(Node.prototype, "name", {
@@ -202,7 +202,7 @@ export class EngineOverrider {
                                 if (suffix == "png" || suffix == "jpg" || suffix == "webp") {
                                     sfURL = arr.join(".");
                                 }
-                                    spriteFrame = await asyncAsset.bundleLoadOneAsset(bundleName, sfURL, SpriteFrame);
+                                spriteFrame = await asyncAsset.bundleLoadOneAsset(bundleName, sfURL, SpriteFrame);
                                 if (spriteFrame && !spriteFrame.isValid) {
                                     spriteFrame = await asyncAsset.loadAny(spriteFrame.uuid, SpriteFrame);
                                 }
@@ -424,7 +424,7 @@ export class EngineOverrider {
         const node_setParent = Node.prototype.setParent;
         Node.prototype.setParent = function setParent(value, keepWorldTransform) {
             //不能用 if(this.scene)来判断是否在场景上 this.scene 不会随着节点的 加载/移除 发生改变
-
+            if (!this.hashCode) this.hashCode = ++Node.hashCode;
             let oldStage = this.stage;
             let newStage;
 
@@ -450,26 +450,18 @@ export class EngineOverrider {
             newStage = this.stage;
 
             if (oldStage != newStage) {//场景发生了变化 有可能换了新场景 也有可能被加入场景成为可视节点  也有可能从场景上被移除出去
-                let nodeList = [this];
-                if (this.emit) this.emit(NodeEventType.STAGE_CHANGED);// node.stage 可以检测有无舞台
+            
+                
 
                 function loop(node: Node) {
-                    if (node.children && node.children.length > 0) {
-                        for (let key in node.children) {
-                            let subNode = node.children[key];
-                            nodeList.push(subNode);
-                            if (subNode.emit) subNode.emit(NodeEventType.STAGE_CHANGED);// node.stage 可以检测有无舞台
-                            loop(subNode);
-                        }
-                    }
-                }
-                loop(this);
+                    if (node.isValid && node.emit) node.emit(NodeEventType.STAGE_CHANGED);// node.stage 可以检测是是否在场景里
 
-                for (let key in nodeList) {
-                    let node = nodeList[key]
+                     //处理节点上spriteFrame(如果有的话)在场景里的引用计数///////////////////////////
                     if (node.getComponent(Sprite) && node.getComponent(Sprite).spriteFrame) {
                         let sp = node.getComponent(Sprite);
                         let sf = node.getComponent(Sprite).spriteFrame;
+
+                       
                         if (!sf["$_$__onStageRef__"]) sf["$_$__onStageRef__"] = 0;
                         if (!sf["$_$__onStageDic__"]) sf["$_$__onStageDic__"] = {};
                         if (newStage && !sf["$_$__onStageDic__"][sp.uuid]) {
@@ -481,7 +473,18 @@ export class EngineOverrider {
                             delete sf["$_$__onStageDic__"][sp.uuid];
                         }
                     }
+                    //处理节点上spriteFrame(如果有的话)的引用计数///////////////////////////
+
+                    if (node.children && node.children.length > 0) {
+                        for (let key in node.children) {
+                            let subNode = node.children[key];
+                            loop(subNode);
+                        }
+                    }
                 }
+                loop(this);
+
+                 
             }
         }
 
@@ -643,8 +646,9 @@ export class EngineOverrider {
 
 
         Node.prototype["getGlobalBounds"] = function (allSubNodes = false) {
-            //↓↓↓本来是这么写的 但是发现用在带Label的Button节点上有bug(目前版本3.7, 不知道官方以后是否会修复),  轮廓是从必定舞台中心开始的 也就是说 这Button只要不在舞台中心, 画出的轮廓肯定是偏大的
+            //↓↓↓本来是这么写的 但是发现用在带Label的Button节点上有bug(目前版本3.7, 不知道官方以后是否会修复),  轮廓至少要包括场景中心 也就是说 Button在场景的左上角, 那么uiTransform.getBoundingBoxToWorld()返回的矩形轮廓是从按钮的左上角到场景中心那么大范围
             //return this.uiTransform.getBoundingBoxToWorld();  
+
             if (this.parent && this.parent instanceof Scene) {
                 return this.uiTransform.getBoundingBoxToWorld();
             }
@@ -1112,7 +1116,7 @@ export class EngineOverrider {
                     for (let key in node.children) {
                         let subNode = node.children[key];
                         nodeList.push(subNode);
-                        if (subNode.emit) subNode.emit(NodeEventType.STAGE_CHANGED);// node.stage 可以检测有无舞台
+                        if (subNode.emit) subNode.emit(NodeEventType.STAGE_CHANGED);// node.stage 可以检测有无场景
                         loop(subNode);
                     }
                 }

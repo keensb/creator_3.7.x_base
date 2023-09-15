@@ -1,8 +1,9 @@
-import { _decorator, assetManager, CCBoolean, CCInteger, CCString, Component, ImageAsset, Node, SpriteAtlas, SpriteFrame, Texture2D, warn } from 'cc';
+import { _decorator, CCString, Component, SpriteAtlas, SpriteFrame, Node, Sprite } from 'cc';
 import { AnimationGroup, TextureInfoMaker } from '../anim/AnimationGroup';
 import { AnimPartSetter } from '../anim/AnimPartSetter';
 import { asyncAsset } from '../mgr/asyncAsset';
-import { EngineOverrider } from '../overwrite/EngineOverrider';
+import { KeyFrameEvent } from '../anim/KeyFrameEvent';
+import { DEBUG } from 'cc/env';
 const { ccclass, property } = _decorator;
 
 @ccclass('AnimationGroupComponent')
@@ -13,10 +14,10 @@ export class AnimationGroupComponent extends Component {
     @property({ tooltip: "本动画所需纹理加载完成之前, 先隐藏本节点(避免在场景中显示出一个'未知图片'的logo)" })
     public hideOnLoading: boolean = true;
 
-    @property({ tooltip: "本动画片段组件所属的分包名(如果加载的是网络图片地址可留空), \n分包最多只能有1个, 本动画片段组件所依赖的图集和图片都必须放在同一个分包里" })
+    @property({ tooltip: "本动画片段组件所属的分包名(非必要, 如果加载的是'http://'格式的网络图片, 此处可留空)" })
     public usingBundle: string = ""
 
-    @property({ type: [CCString], tooltip: "本动画片段组件所依赖的全部图集的在分包下的路径列表(须先通过路径加载图集, 才能使用其下的子纹理; \n如果所有序列帧纹理均是来自独立图片的话可以忽略此项)\n格式不带 分包名 和 '.plist' 例如 分包名为'atlas', 图集路径为'atlas/role/actions.plist', 填入'role/actions'即可  \n另外本组件的纹理来源, 要么全都是来自图集, 要么全都是来自独立图片\n不支持'一部分来自图集, 而另一部分来自独立图片'的混合方式" })
+    @property({ type: [CCString], tooltip: "所依赖的全部图集在分包下的路径列表(非必要 须先通过路径加载图集, 才能使用其下的子纹理; \n如果加载的是'http://'格式的网络图片话可以忽略此项)\n格式不带 分包名 和 '.plist' 例如 分包名为'atlas', 图集路径为'atlas/role/actions.plist', 填入'role/actions'即可  \n另外本组件的纹理来源, 要么全都是来自图集, 要么全都是来自独立图片\n不支持'一部分来自图集, 而另一部分来自独立图片'的混合方式" })
     public usingAtlasPathList: string[] = [];
 
     @property({ type: [AnimPartSetter], tooltip: "序列帧动画片段设置器列表, 对应动画分组信息(必要)" })
@@ -35,15 +36,15 @@ export class AnimationGroupComponent extends Component {
 
     private sourceObject: { [key: number | string]: SpriteFrame } = {};
 
-    private originl_active: boolean;
+    private originl_opacity: number;
 
     /**
      * 第一次执行update之前执行，只会执行一次
      */
     async start(): Promise<void> {
-        this.originl_active = this.node.active;
+        this.originl_opacity = this.node.opacity;
         if (this.hideOnLoading) {
-            this.node.active = false;
+            this.node.opacity = 0;
         }
 
         if (!this.$anim) {
@@ -51,14 +52,15 @@ export class AnimationGroupComponent extends Component {
         }
 
         let imgList = [];
-        
+
 
         for (let i = 0; i < this.animPartSetterList.length; i++) {
             if (!this.animPartSetterList[i].texturePrefix) {
-                console.error("无效的地址前缀 texturePrefix");
+                //console.error("无效的地址前缀 texturePrefix");
             }
-            if (!this.animPartSetterList[i].texturePrefix) {
-                console.error("无效的地址后缀 textureSuffix");
+            if (!this.animPartSetterList[i].textureSuffix) {
+                this.animPartSetterList[i].textureSuffix = ".png"
+                //console.error("无效的地址后缀 textureSuffix");
             }
             if (this.animPartSetterList[i].startIndex < 0) {
                 console.error("无效的起始位置 startIndex");
@@ -118,37 +120,40 @@ export class AnimationGroupComponent extends Component {
 
 
         if (this.usingBundle && this.usingBundle != "") {
-            console.log("开始加载分包 " + this.usingBundle);
             let bundle = await asyncAsset.loadOneBundle(this.usingBundle);//首先加载依赖的分包 
-
             if (!bundle) {
                 console.warn("分包 " + this.usingBundle + " 不存在!");
+                return;
             }
             else {
-                console.log("分包 " + this.usingBundle + " 加载成功");
+                //console.log("分包 " + this.usingBundle + " 加载成功");
             }
         }
 
         let _self = this;
         let atlas_loaded = false;
         let img_loaded = false;
-        if (this.usingAtlasPathList && this.usingAtlasPathList.length > 0) {//有图集
-            for (let i = 0; i < this.usingAtlasPathList.length; i++) {
-                let _path = this.usingAtlasPathList[i];
+
+        let loadedCount = 0;
+        if (_self.usingAtlasPathList && _self.usingAtlasPathList.length > 0) {//有图集
+            for (let i = 0; i < _self.usingAtlasPathList.length; i++) {
+                let _path = _self.usingAtlasPathList[i];
                 if (_path.substring(_path.length - 6, _path.length) == ".plist") {
                     _path = _path.substring(0, _path.length - 6);
                 }
                 //assetManager.getBundle(this.usingBundle).load(this.usingAtlasPathList[i], SpriteAtlas, (err, res:SpriteAtlas) => {
-                asyncAsset.bundleLoadOneAsset(this.usingBundle, _path, SpriteAtlas, (res: SpriteAtlas) => {
+                asyncAsset.bundleLoadOneAsset(_self.usingBundle, _path, SpriteAtlas, (res: SpriteAtlas) => {
+                    loadedCount++;
                     if (res) {
                         for (let key in res.spriteFrames) {//子纹理在图集上的key, 不带格式后缀
                             _self.sourceObject[key + ".png"] = res.spriteFrames[key];
                         }
+                        _self.node.directGetComponent(Sprite).spriteFrame = res.spriteFrames[0];
                     }
                     else {
-                        console.warn("分包 " + this.usingBundle + " 不存在图集 " + _path);
+                        console.warn("分包 " + _self.usingBundle + " 不存在图集 " + _path);
                     }
-                    if (i == _self.usingAtlasPathList.length - 1) {
+                    if (loadedCount == _self.usingAtlasPathList.length) {
                         atlas_loaded = true;
                         _self.create();
                     }
@@ -163,26 +168,31 @@ export class AnimationGroupComponent extends Component {
         }
 
         if (imgList.length > 0) {
-            if (!this.usingAtlasPathList || !this.usingAtlasPathList.length) {//没有图集, 全都是图片
+            if (!_self.usingAtlasPathList || !_self.usingAtlasPathList.length) {//没有图集, 全都是图片
                 for (let i = 0; i < imgList.length; i++) {
                     if (imgList[i].indexOf("://") == -1) {
-                        asyncAsset.bundleLoadOneAsset(this.usingBundle, imgList[i], SpriteFrame, (res) => {
-                            this.sourceObject[imgList[i]] = res;
-                            if (i == imgList.length - 1) {
+                        asyncAsset.bundleLoadOneAsset(_self.usingBundle, imgList[i], SpriteFrame, (res) => {
+                            loadedCount++;
+                            _self.sourceObject[imgList[i]] = res;
+                            _self.node.directGetComponent(Sprite).spriteFrame = res;
+                            if (loadedCount == imgList.length) {
                                 img_loaded = true;
                                 if (atlas_loaded) {
-                                    this.create();
+                                    _self.create();
                                 }
                             }
+
                         })
                     }
                     else {
                         asyncAsset.loadOneRemoteSpriteFrame(imgList[i], (res) => {//网络图片
-                            this.sourceObject[imgList[i]] = res;
-                            if (i == imgList.length - 1) {
+                            loadedCount++;
+                            _self.sourceObject[imgList[i]] = res;
+                            _self.node.directGetComponent(Sprite).spriteFrame = res;
+                            if (loadedCount == imgList.length) {
                                 img_loaded = true;
                                 if (atlas_loaded) {
-                                    this.create();
+                                    _self.create();
                                 }
                             }
                         })
@@ -191,16 +201,20 @@ export class AnimationGroupComponent extends Component {
             }
             else {
                 if (atlas_loaded) {
-                    this.create();
+                    _self.create();
                 }
             }
         }
         else {
             img_loaded = true;
             if (atlas_loaded) {
-                this.create();
+                _self.create();
             }
         }
+    }
+
+    get animationGroup(): AnimationGroup {
+        return this.$anim;
     }
 
     private create(): void {
@@ -208,15 +222,11 @@ export class AnimationGroupComponent extends Component {
         //  let ani = new AnimationGroup(find("Canvas/sprite"), [info0, info1, info2, info3, info4], 1, true, asyncAsset.remoteSpriteFrameCache)
 
         //纹理有可能尚未被加载, 不能正常显示 需要异步处理一下
-        if (this.hideOnLoading) {
-            this.scheduleOnce(() => {
-                this.node.active = this.originl_active;//延迟一帧显示, 否则可能会出现位置"跳动"的感觉
-            }, 1/60);
-        }
+        this.node.opacity = this.originl_opacity;
         let infoList = [];
-        let eventList = [];
+        let eventList: KeyFrameEvent[][] = [];
         for (let i = 0; i < this.animPartSetterList.length; i++) {
-            let info = TextureInfoMaker.createInfoStart2End(this.animPartSetterList[i].texturePrefix, this.animPartSetterList[i].textureSuffix, this.animPartSetterList[i].startIndex, this.animPartSetterList[i].endIndex, this.animPartSetterList[i].digits, this.animPartSetterList[i].flag);
+            let info = TextureInfoMaker.createInfoStart2End(this.animPartSetterList[i].texturePrefix, this.animPartSetterList[i].textureSuffix, this.animPartSetterList[i].startIndex, this.animPartSetterList[i].endIndex, this.animPartSetterList[i].digits, this.animPartSetterList[i].flag, { cx: this.node.uiTransform.anchorX, cy: this.node.uiTransform.anchorY });
             infoList.push(info);
             eventList.push(this.animPartSetterList[i].keyFrameEventList);
         }
@@ -243,8 +253,8 @@ export class AnimationGroupComponent extends Component {
                 for (let b = 0; b < eventList[a].length; b++) {
                     if (eventList[a][b].eventType) {
                         this.$anim.addFrameScriptInPart(a, eventList[a][b].frameIndex, () => {
-                            let dispatcher = eventList[a][b].dispatcher || this.node;
-                            dispatcher.event(eventList[a][b].eventType, eventList[a][b].data);
+                            let dispatcher: Node = eventList[a][b].dispatcher || this.node;
+                            dispatcher.emit(eventList[a][b].eventType, eventList[a][b].data);
                         });
                     }
                 }
@@ -266,4 +276,7 @@ export class AnimationGroupComponent extends Component {
     public get anim(): AnimationGroup {
         return this.$anim;
     }
+}
+if (DEBUG) {
+    window["AnimationGroupComponent"] = AnimationGroupComponent;
 }
