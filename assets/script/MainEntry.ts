@@ -144,6 +144,8 @@ export class MainEntry extends Component {
             }
         })
 
+        
+
 
         let count2 = 0;
         for (let i = 1; i <= 74; i++) {

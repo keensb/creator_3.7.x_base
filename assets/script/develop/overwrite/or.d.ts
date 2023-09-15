@@ -19,7 +19,7 @@ declare module "cc" {//<----------注意:这里坑爹的地方  模块名不是 
         /**
          * 检测BaseNode当前的最高父级节点是否为当前的Scene(director.getScene());  baseNode.stage不等同于baseNode.scene,  baseNode.stage会随着自身或任一父级容器的 加载/移除 检测自身当前最高父级节点是不是当前场景 并同时对外派发NodeEventType.STAGE_CHANGED消息通知
          */
-        stage: Scene;
+        get stage(): Scene;
 
         /**
          * 检测本节点(最高级别为Scene)和其下各级子节点有没有这个Component, 有的话存进数组并最终返回
@@ -30,10 +30,10 @@ declare module "cc" {//<----------注意:这里坑爹的地方  模块名不是 
          * 获得本节点在全局的轮廓   如果是开发测试版, 你可以通过在控制台输入 $dd(node.getGlobalBounds()) 和 $dd(node.getGlobalBounds(true)) 观察绘制出的目标节点的轮廓
          * @param   allSubNodes 是否通过递归把各级子节点的轮廓也算进去, 默认是false
          */
-        getGlobalBounds(allSubNodes?:boolean): Rect;
+        getGlobalBounds(allSubNodes?: boolean): Rect;
 
         /**
-         * 判断本节点的下面是否包含指定的节点
+         * 递归判断本节点与各级子节点是否包含指定的节点
          * @param   target 目标节点
          */
         contains(target: Node): boolean;
@@ -48,7 +48,7 @@ declare module "cc" {//<----------注意:这里坑爹的地方  模块名不是 
          * 通过hashCode查找节点下的对象
          */
         getNodeByHashCode(hashCode: number): Node;
-        
+
         /**
          * 本节点在项目里的序列号 主要用于统计节点的创建数量
          */
@@ -57,11 +57,9 @@ declare module "cc" {//<----------注意:这里坑爹的地方  模块名不是 
         get gl_active(): boolean;
 
         get gl_opacity(): number;
-
-        
     }
 
-    export namespace Node{ 
+    export namespace Node {
         export var hashCode: number;
     }
 
@@ -72,19 +70,20 @@ declare module "cc" {//<----------注意:这里坑爹的地方  模块名不是 
     }
 
     export interface Sprite {
-
         /**
-         * 让Sprite实例 可以通过  <Sprite>.asyncSpriteFrame = xxx 的方式 同步或异步获取在usingAssets中注册过的SpriteFrame 或 其他远程图片  xxx 可以是url也可以是uuid
-         * 一般情况下此方法都是必得一个有效的SpriteFrame( isValid==true ), 如果你早前已经destroy了该SpriteFrame, <Sprite>.asyncSpriteFrame 会自动识别被销毁的SpriteFrame并将其移除出缓存字典, 然后再重新加载一份
+         * 参考Laya的Image.skin 和 fairyGUI的 loader.source , 兼容同步和异步加载纹理
+         * 让Sprite实例 可以通过  <Sprite>.asyncSpriteFrame = xxx 的方式 同步或异步获取在usingAssets中注册过的SpriteFrame 或 其他远程图片  xxx 可以是url也可以是uuid 也可以是本地资源地址
+         * 一般情况下只要参数无误 此方法都能必得一个有效的SpriteFrame( isValid==true ), 如果你早前已经destroy了该SpriteFrame,  asyncSpriteFrame 方法会尝试复活该SpriteFrame(自动识出别被销毁的SpriteFrame并将其移除出缓存字典, 然后再重新加载一份)
          * 
          * @example
          * sprite.asyncSpriteFrame = usingAssets.myBundle.avatarSpriteFrame;//同步或异步获得本地 分包名被定义为"myBundle"的文件夹里的SpriteFrame (avatarSpriteFrame 是SpriteFrame在usingAssets里的注册名)
          * sprite.asyncSpriteFrame = [usingAssets.myBundle.avatarAtlas, "face_png"]; //同步或异步获得本地 分包名被定义为"myBundle"的文件夹里的图集SpriteAtlas (avatarAtlas 是SpriteAtlas在usingAssets里的注册名)下的 名为"face_png"的子图SpriteFrame
          * sprite.asyncSpriteFrame = "http://www.abc.com/hello.png"  //同步或异步获得远程图片资源并转为 SpriteFrame, 该SpriteFrame会被暂时保存在 EngineOverrider.remoteSpriteFrameCache 字典里,直到被销毁
          * sprite.asyncSpriteFrame = "2dExFwWqlEtYtlUkMRgS3A"  //同步或异步通过uuid获取图片的 SpriteFrame
-         * 
+         * sprite.asyncSpriteFrame = "分包名/role/actions.plist/run0001" //同步或异步获取本地分包文件夹里的纹理  逻辑是当字符串不包含"://"的时候 把第一个"/"前面的字符串视为分包名  而后面的字符串如果附带 ".plist/" 就会被视为图集 
+         * sprite.asyncSpriteFrame = "分包名/role/actions/attack0001" //同步或异步获取本地分包文件夹里的纹理  逻辑是当字符串不包含"://"的时候 把第一个"/"前面的字符串视为分包名  而后面的字符串如果不附带 ".plist/" 就会被视单独的图片 后缀名的".png" 可加也可不加
          */
-        set asyncSpriteFrame(sfObject: { bundle: string, url: string } | [{ bundle: string, type: new (...args) => SpriteAtlas, url: string }] | string | SpriteFrame);
+        set asyncSpriteFrame(sfObject: { bundle: string, url: string } | [spriteAtlasCfg: { bundle: string, type: new (...args) => SpriteAtlas, url: string }, spriteFrameKey: string] | string | SpriteFrame);
         get asyncSpriteFrame(): SpriteFrame;
     }
 
@@ -95,7 +94,6 @@ declare module "cc" {//<----------注意:这里坑爹的地方  模块名不是 
         destorySafe: boolean;
 
         /**
-         * 
          * 强制执行SpriteFrame实例的销毁方法,在销毁时会自动解除其他Sprite实例对该SpriteFrame实例的引用
          */
         forceDestroy: () => boolean
@@ -163,5 +161,5 @@ declare module "cc" {//<----------注意:这里坑爹的地方  模块名不是 
     //定义事件
     export enum NodeEventType {
         STAGE_CHANGED = "scene-changed"
-    } 
+    }
 }

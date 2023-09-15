@@ -136,9 +136,13 @@ export class debugUtils { }
                 g.fill();
             }
             else {
-                // d.graphics.drawPoly(0, 0, points, "#ff0000");//当前的目标不显示(gl_active或gl_opacity)问题
                 g.lineWidth = 0;
-                g.fillColor = new Color(0, 255, 0, 60);
+                if (rectOrPoints && rectOrPoints == globalThis["$tt"] && (!globalThis["$tt"].gl_active || globalThis["$tt"].gl_opacity == 0)) {
+                    g.fillColor = new Color(255, 0, 0, 60);//当前存在于舞台, 但是不可见(gl_active或gl_opacity的原因)
+                }
+                else {
+                    g.fillColor = new Color(0, 255, 0, 60);//当前存在于舞台, 并且可见
+                }
                 g.moveTo(points[0], points[1]);
                 for (let i = 2; i < points.length; i += 2) {
                     g.lineTo(points[i], points[i + 1]);
@@ -195,9 +199,6 @@ export class debugUtils { }
        globalThis["AnimationGroupPlayer"] = AnimationGroupDirector; */
 
 
-
-
-
     globalThis["$rd"] = (rectOrPoints, point2 = undefined) => {
         globalThis["$dd"]();
         globalThis["$dd"](rectOrPoints, point2);
@@ -210,9 +211,6 @@ export class debugUtils { }
         }
         return false;
     }
-
-
-
 
 
 
@@ -250,7 +248,7 @@ export class debugUtils { }
                     let t: any = director.getScene();
                     let nodeList = director.getScene().getAllSubNodes();
 
-                    if (nodeList.indexOf(globalThis["debug_block"]) >= 0){
+                    if (nodeList.indexOf(globalThis["debug_block"]) >= 0) {
                         nodeList.splice(nodeList.indexOf(globalThis["debug_block"]), 1);
                     }
 
@@ -258,7 +256,7 @@ export class debugUtils { }
                         if (nodeList[key] instanceof Node == false) continue;
                         let k = <Node>nodeList[key];
                         if (!k.gl_active) continue;
-                        if (k == globalThis["debug_d"]) continue;
+                        if (k == globalThis["debug_d"] || k == globalThis["debug_d2"]) continue;
                         // if (k.getGlobalBounds().contains(hitP) == false) continue;//先判定轮廓碰撞
                         //if (k.hitTestPoint(evt._prevX, evt._prevY) == false) continue;//再判定像素点碰撞
 
@@ -293,12 +291,9 @@ export class debugUtils { }
                     globalThis["$tt"] = t;
                     globalThis["$ot"] = t;
 
-
                     draw();
 
-
                     globalThis["$nt"]();
-
                 }
 
                 //点鼠标右键 优先选中上级节点(相当于可视对象的节点) 例如右键点击List里的条目, 选中的是List节点 而不是条目本身
@@ -316,7 +311,7 @@ export class debugUtils { }
 
                 // input.on(Input.EventType.KEY_DOWN, this.onKeyDown, this);
                 //input.on(Input.EventType.KEY_UP, this.onKeyUp, this);
-                
+
 
                 input.on(Input.EventType.KEY_DOWN, (evt) => {
                     if (iskeyDown) return;
@@ -336,13 +331,13 @@ export class debugUtils { }
                         globalThis["debug_block"].x = 0;
                         globalThis["debug_block"].y = 0;
                         widget.updateAlignment();
-                        
-                        
+
+
 
                         console.log("开启 debug_MouseDown");
                         iskeyDown = true;
-                        
-                        
+
+
 
                         globalThis["debug_block"].on(NodeEventType.MOUSE_DOWN, mouseDown, this);
                         director.getScheduler().unschedule(globalThis["$draw"], director.getScene());
@@ -371,9 +366,9 @@ export class debugUtils { }
 
                 function draw() {
                     let bool = globalThis["$dt"]();
-                    /* if (!globalThis["$ot"] || !bool) {
-                        Laya.timer.clear(slef, draw);
-                    } */
+                    if (!globalThis["$ot"] || !bool) {
+                        director.getScheduler().unschedule(globalThis["$draw"], director.getScene());
+                    }
                 }
 
                 globalThis["$draw"] = draw;
@@ -385,6 +380,7 @@ export class debugUtils { }
                     globalThis["$dd"]();
                 }) */
 
+                //直接通过舞台上的Node对象的hashCode, 获得其引用
                 globalThis["$hh"] = function (hashCode) {
                     return EngineOverrider.stageSubNodeDic[hashCode];
                 };
@@ -415,8 +411,9 @@ export class debugUtils { }
             $tt = globalThis["$tt"];
             globalThis["$ot"] = $tt;
         }
-        if (!$tt) {
-            console.log("焦点或目标对象 不存在!");
+        if (!$tt || !$tt.stage) {
+            console.log("焦点或目标对象 不在舞台上!");
+            director.getScheduler().unschedule(globalThis["$draw"], director.getScene());
             return;
         }
 
@@ -502,13 +499,13 @@ export class debugUtils { }
         /**
             //颜色与优先级别说明  1~7 从高到低
             首先约定以下3个概念:
-                正常显示--节点的自身visible与各级父节点的visible均为true, 同时节点的自身的alpha与各级父节点的alpha均大于0
-                非正常显示--节点的自身visible与各级父节点的visible至少有一个是false, 或者节点的自身的alpha与各级父节点的alpha至少有一个等于0   附:visible为false的非正常显示节点一般点不到, 但你可以通过在控制台输入 $nt(节点hashCode) 获得它的焦点; 
-                最高级非正常显示节点--假设节点a0下面有节点a1, 节点a1下面有节点a2, 节点a2下面有节点a3,  a0和a3的visible等于true, 而a1和a2的visible等于false; 此时a1和a2都影响a3不能正常显示,  但是向上追溯'不能正常显示的最高级节点'是a1而不是a2, 更不是a0(a0是正常显示的) a1就在这里被称为'最高级非正常显示节点'
+                正常显示--节点的自身active与各级父节点的active均为true, 同时节点的自身的opacity与各级父节点的opacity均大于0
+                非正常显示--节点的自身active与各级父节点的active至少有一个是false, 或者节点的自身的opacity与各级父节点的opacity至少有一个等于0   附:active为false的非正常显示节点一般点不到, 但你可以通过在控制台输入 $nt(节点hashCode) 获得它的焦点; 
+                最高级非正常显示节点--假设节点a0下面有节点a1, 节点a1下面有节点a2, 节点a2下面有节点a3,  a0和a3的active等于true, 而a1和a2的active等于false; 此时a1和a2都影响a3不能正常显示,  但是向上追溯'不能正常显示的最高级节点'是a1而不是a2, 更不是a0(a0是正常显示的) a1就在这里被称为'最高级非正常显示节点'
 
             
             1、亮绿色: 当前目标节点, 正常显示 
-            2、桔黄色: 目标节点的各级父节点, , 正常显示 
+            2、桔黄色: 目标节点的各级父节点,  正常显示 
             3、浅蓝色: 目标节点下的各级子节点, 正常显示
             4、白色(当浏览器选择'暗'主题的时候)/黑色(当浏览器选择'亮'主题的时候): 正常显示的节点, 并且该节点不是目标节点(如果是目标节点则根据优先级显示为 1级的亮绿色)
 
@@ -516,9 +513,9 @@ export class debugUtils { }
             6、红色: 最高级非正常显示节点, 并且该节点不是目标节点(否则显示为 5级的暗绿色)
             7、灰色: 非正常显示的节点, 该节点不是目标节点(否则显示为 5级的暗绿色), 也不是最高级非正常显示节点(否则显示为 6级的红色), 
         */
-        function findSubPath(node: Node) { //节点文字使用灰色, 表示当前节点的全局visible = false
+        function findSubPath(node: Node) { //节点文字使用灰色, 表示当前节点的全局active = false
             let isGroup: boolean = false;
-            if (node == globalThis["debug_d"] || node == globalThis["debug_d2"]) return;
+            if (node == globalThis["debug_d"] || node == globalThis["debug_d2"] || node == globalThis["debug_block"]) return;
             //技巧1 (nameless)  意为'没有自定义name'的节点(这里自动使用实例的类名来代替), 你无法通过 parent.getChildByName 来获得对目标的引用 ※在IDE里添加的节点都有默认的name, 没有name(除非是你故意手动删除节点name xx.name="")的节点一般不存在于开发界面的场景或预制体里, 而是通过业务代码创建出来的※
             //技巧2 '节点对象["xxxx"]' 这种动态的引用路径的出现, 一般都是Scene2D或Prefab通过'UI运行时'绑定了子节点, 直接去查看'UI运行时'绑定的脚本就可以快速定位了
             let nodeName = node.name ? node.name + "( cls = " + node.constructor.name + " )" : node["__proto__"].constructor.name + "( nameless,  cls = " + node.constructor.name + " )";
@@ -584,7 +581,7 @@ export class debugUtils { }
                     }
                 }
                 else if (node.contains(t)) {//如果目标节点在此节点下方, 展开显示
-                    if (node.gl_active && node.gl_opacity > 0) {//这个分组节点全局visible可见
+                    if (node.gl_active && node.gl_opacity > 0) {//这个分组节点全局active可见
                         console.group("%c" + nodeName + "    ( index = " + nodeIndex + "   hashCode = " + node.hashCode + " )", 'color: #FFCC00;');
                     }
                     else {
@@ -597,7 +594,7 @@ export class debugUtils { }
                     }
                 }
                 else { //否则折叠显示
-                    if (node.gl_active && node.gl_opacity > 0) {//这个分组节点全局visible可见
+                    if (node.gl_active && node.gl_opacity > 0) {//这个分组节点全局active可见
                         if (t.contains(node)) {//如果是目标的子孙级节点
                             console.groupCollapsed("%c" + nodeName + "    ( index = " + nodeIndex + "   hashCode = " + node.hashCode + " )", 'color: #00CCFF;');//蓝色高亮
                         }
@@ -629,7 +626,7 @@ export class debugUtils { }
                         console.log("%c" + nodeName + "    ( index = " + nodeIndex + "   hashCode = " + node.hashCode + " )", 'color: #006600;');
                     }
                 }
-                else if (node.gl_active && node.gl_opacity > 0) {//这个分组节点全局visible可见
+                else if (node.gl_active && node.gl_opacity > 0) {//这个分组节点全局active可见
                     if (t.contains(node)) {//如果是目标的子孙级节点
                         console.log("%c" + nodeName + "    ( index = " + nodeIndex + "   hashCode = " + node.hashCode + " )", 'color: #00CCFF;');//蓝色高亮
                     }
@@ -655,25 +652,28 @@ export class debugUtils { }
 
         findSubPath(currentScene)
 
+        //cc.director.getScene().getChildByName('Canvas').children[8].getChildByName('Label')
+        let arr = pathTree.split(".");
+        arr.shift();
+        arr.shift();
+        arr.shift();//getChildByName('Canvas') , children[8], getChildByName('Label')
+        let _pathTree;
+        let findArr = [];
+        while (arr[0] && arr[0].indexOf("getChildByName('") >= 0) {
+            let str = arr.shift();
+            findArr.push(str.split("'")[1]);
+        }
 
-        /*  let arr = pathTree.split(")");
-         arr.shift();
-         let _pathTree;
-         let findArr = [];
-         while (arr[0] && arr[0].indexOf(".getChildByName('") >= 0) {
-             let str = arr.shift();
-             findArr.push(str.split("'")[1]);
-         }
- 
-         if (findArr.length > 0) {
-             _pathTree = "cc.find('" + findArr.join("/") + "')";
-             if (arr.length) {
-                 _pathTree +"." + arr.join(")")
-             }
-             pathTree = _pathTree;
-         } */
+        if (findArr.length > 0) {
+            _pathTree = "cc.find('" + findArr.join("/") + "')";
+            if (arr.length) {
+                _pathTree = _pathTree + "." + arr.join(".")
+            }
+            pathTree = _pathTree;
+            //console.log("_pathTree =", _pathTree);
+        }
 
-        console.log("\n从Scene到\x1b[32m目标对象\x1b[0m的最快捷引用路径:\n \x1b[32m" + pathTree + '\x1b[0m');//从stage到目标节点的获取方式, 优先使用getChildByName; 如果是nameless的节点则使用children[xx]
+        console.log("\n从\x1b[32mScene\x1b[0m到\x1b[32m目标对象\x1b[0m(已被保存为全局变量\x1b[32m$tt\x1b[0m)的最快捷引用路径:\n\x1b[32m" + pathTree + '\x1b[0m');//从stage到目标节点的获取方式, 优先使用getChildByName; 如果是nameless的节点则使用children[xx]
 
         //console.log(nodeTree);
         //其实可以通过以方式实现
@@ -700,7 +700,9 @@ export class debugUtils { }
         return globalThis["$ot"];
     }
 
-
+    //$pp函数 主要是通过递归快速查找目标节点的引用路径, 还可以反射出哪个父节点的脚本类持有目标节点的引用
+    //$pp(node引用或node的hashCode) 将获得该 从Scene到该node的最快捷引用路径 
+    //$pp(node1引用或node1的hashCode, node2引用或node2的hashCode) 将获得该 从node1到node2的最快捷引用路径
     globalThis["$pp"] = function (topOrTarget, target) {
         if (typeof topOrTarget == "number") {
             topOrTarget = EngineOverrider.stageSubNodeDic[topOrTarget];
@@ -789,7 +791,29 @@ export class debugUtils { }
             }
 
         }
-       
+
+         //cc.director.getScene().getChildByName('Canvas').children[8].getChildByName('Label')
+         let arr = pathTree.split(".");
+         arr.shift();
+         arr.shift();
+         arr.shift();//getChildByName('Canvas') , children[8], getChildByName('Label')
+         let _pathTree;
+         let findArr = [];
+         while (arr[0] && arr[0].indexOf("getChildByName('") >= 0) {
+             console.log("arr =", arr);
+             let str = arr.shift();
+             findArr.push(str.split("'")[1]);
+         }
+
+         if (findArr.length > 0) {
+             _pathTree = "cc.find('" + findArr.join("/") + "')";
+             if (arr.length) {
+                 _pathTree = _pathTree + "." + arr.join(".")
+             }
+             pathTree = "%c" + _pathTree;
+             //console.log("_pathTree =", _pathTree);
+         }
+
         console.log(pathTree, 'color: #00ff00;');
     }
 

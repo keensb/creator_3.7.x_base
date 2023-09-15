@@ -289,7 +289,7 @@ class AsyncAsset {
                     resolve(res);
                 }
                 else {
-                    console.warn("资源不存在, 请检查路径bundle " + _bundle.name + "所在路径" + _bundle.base + "下是否存在文件路径" + resUrl);//如果不存在,那多半是用错bundle或bundle路径了
+                    console.warn("资源不存在, 请检查路径bundle " + _bundle.name + "所在路径" + _bundle.base + "下是否存在文件路径" + resUrl, "另外提醒一下:文件路径要去除后缀名 例如去掉 '.png'、'.plist'、'.json'(通过creator IDE的 '复制并打印 URL' 命令获得的URL可能是带后缀名的) ");//如果不存在,那多半是用错bundle或bundle路径了
                     if (onComplete) {
                         onComplete(res);
                     }

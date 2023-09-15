@@ -17,50 +17,50 @@ export class EngineOverrider {
         //新增API, 建议把API写进 or.d.ts 下的 interface Node 中,便于在使用时带自动提示功能
         Node.hashCode = 0;
 
-        if (DEBUG) {
-            Object.defineProperty(Node.prototype, "sprite", {
-                get: function () {
-                    return this.getComponent(Sprite);
-                },
-                enumerable: true,
-                configurable: true
-            })
+        // if (DEBUG) {//DEBUG{} 中的代码仅限于控制台调试, 不要用在生产环境
+        Object.defineProperty(Node.prototype, "sprite", {
+            get: function () {
+                return this.getComponent(Sprite);
+            },
+            enumerable: true,
+            configurable: true
+        })
 
-            Object.defineProperty(Node.prototype, "spriteFrame", {
-                get: function () {
-                    if (!this.getComponent(Sprite)) {
-                        //console.warn("本节点原本不存在Sprite组件 getter不会自动给节点添组件")
-                        return null;
-                    }
-                    return this.getComponent(Sprite).spriteFrame;
-                },
-                set: function (value) {
-                    if (!this.getComponent(Sprite)) {
-                        console.warn("本节点原本不存在Sprite组件, 现在自动为其添加")
-                        this.addComponent(Sprite)
-                    }
-                    this.getComponent(Sprite).spriteFrame = value;
-                },
-                enumerable: true,
-                configurable: true
-            })
+        Object.defineProperty(Node.prototype, "spriteFrame", {
+            get: function () {
+                if (!this.getComponent(Sprite)) {
+                    //console.warn("本节点原本不存在Sprite组件 getter不会自动给节点添组件")
+                    return null;
+                }
+                return this.getComponent(Sprite).spriteFrame;
+            },
+            set: function (value) {
+                if (!this.getComponent(Sprite)) {
+                    console.warn("本节点原本不存在Sprite组件, 现在自动为其添加")
+                    this.addComponent(Sprite)
+                }
+                this.getComponent(Sprite).spriteFrame = value;
+            },
+            enumerable: true,
+            configurable: true
+        })
 
-            Object.defineProperty(Node.prototype, "texture", {
-                get: function () {
-                    if (!this.getComponent(Sprite)) return null;
-                    if (!this.getComponent(Sprite).spriteFrame) return null;
-                    return this.getComponent(Sprite).spriteFrame.texture;
-                },
-                enumerable: true,
-                configurable: true
-            })
+        Object.defineProperty(Node.prototype, "texture", {
+            get: function () {
+                if (!this.getComponent(Sprite)) return null;
+                if (!this.getComponent(Sprite).spriteFrame) return null;
+                return this.getComponent(Sprite).spriteFrame.texture;
+            },
+            enumerable: true,
+            configurable: true
+        })
 
-            globalThis["$cr"] = function (sf?: SpriteFrame): Node {
-                let newNode = new Node();
-                newNode.addComponent(Sprite).spriteFrame = sf;
-                return newNode;
-            }
+        globalThis["$cr"] = function (sf?: SpriteFrame): Node {
+            let newNode = new Node();
+            newNode.addComponent(Sprite).spriteFrame = sf;
+            return newNode;
         }
+        //   }
 
         let getname = Object.getOwnPropertyDescriptor(Node.prototype, "name").get;
         Object.defineProperty(Node.prototype, "name", {
@@ -88,7 +88,7 @@ export class EngineOverrider {
 
         Object.defineProperty(Node.prototype, "stage", {
             get: function () {
-                if (!director.getScene()) return false;
+                if (!director.getScene()) return null;
                 let parent = this.parent;
                 while (parent && parent.parent) {
                     parent = parent.parent;
@@ -150,6 +150,9 @@ export class EngineOverrider {
                     }
                     else if (sfObject["bundle"] && sfObject["url"]) {// usingAssets配置资源      建议参数使用 usingAsset的配置
                         spriteFrame = await asyncAsset.bundleLoadOneAsset(sfObject["bundle"], sfObject["url"], SpriteFrame);
+                        if (spriteFrame && !spriteFrame.isValid) {
+                            spriteFrame = await asyncAsset.loadAny(spriteFrame.uuid, SpriteFrame);
+                        }
                         if (_this.isValid) _this.spriteFrame = spriteFrame;
                         delete _this._tempSpriteFrame;
                     }
@@ -163,6 +166,9 @@ export class EngineOverrider {
                             delete _this._tempSpriteFrame;
                         }
                         else {
+                            if (spriteFrame && !spriteFrame.isValid) {
+                                spriteFrame = await asyncAsset.loadAny(spriteFrame.uuid, SpriteFrame);
+                            }
                             if (_this.isValid) _this.spriteFrame = spriteFrame;
                             delete _this._tempSpriteFrame;
                         }
@@ -170,9 +176,49 @@ export class EngineOverrider {
                 }
                 else if (typeof sfObject == "string") {//uuid 或 url地址
                     if (sfObject.indexOf("://") == -1) {//这不是 url地址 那就当做uuid处理 压缩或未压缩的 uuid, asyncAsset.loadAny都会自动识和处理
-                        spriteFrame = await asyncAsset.loadAny(sfObject, SpriteFrame);
-                        if (_this.isValid) _this.spriteFrame = spriteFrame;
-                        delete _this._tempSpriteFrame;
+                        if (sfObject.indexOf("/") >= 0) {
+                            let urlArr = sfObject.split("/");
+                            let bundleName = urlArr.shift();
+                            let sfURL = urlArr.join("/");
+
+                            if (sfObject.indexOf(".plist/") >= 0) {//这是一个图集下的子纹理
+                                urlArr = sfURL.split(".plist/");
+                                let atlasURL = urlArr[0];
+                                let key = urlArr[1];
+
+                                let _atlas = await asyncAsset.bundleLoadOneAsset(bundleName, atlasURL, SpriteAtlas);
+                                if (_atlas && _atlas.spriteFrames) {
+                                    spriteFrame = _atlas.spriteFrames[key];
+                                }
+                                if (spriteFrame && !spriteFrame.isValid) {
+                                    spriteFrame = await asyncAsset.loadAny(spriteFrame.uuid, SpriteFrame);
+                                    _atlas.spriteFrames[key] = spriteFrame;
+                                }
+                                if (_this.isValid) _this.spriteFrame = spriteFrame;
+                            }
+                            else {
+                                let arr = sfURL.split(".");
+                                let suffix = arr.pop().toLowerCase();
+                                if (suffix == "png" || suffix == "jpg" || suffix == "webp") {
+                                    sfURL = arr.join(".");
+                                }
+                                    spriteFrame = await asyncAsset.bundleLoadOneAsset(bundleName, sfURL, SpriteFrame);
+                                if (spriteFrame && !spriteFrame.isValid) {
+                                    spriteFrame = await asyncAsset.loadAny(spriteFrame.uuid, SpriteFrame);
+                                }
+                                if (_this.isValid) _this.spriteFrame = spriteFrame;
+                            }
+
+                            delete _this._tempSpriteFrame;
+                        }
+                        else {
+                            spriteFrame = await asyncAsset.loadAny(sfObject, SpriteFrame);
+                            if (spriteFrame && !spriteFrame.isValid) {
+                                spriteFrame = await asyncAsset.loadAny(spriteFrame.uuid, SpriteFrame);
+                            }
+                            if (_this.isValid) _this.spriteFrame = spriteFrame;
+                            delete _this._tempSpriteFrame;
+                        }
                     }
                     else {
                         if (asyncAsset.remoteSpriteFrameCache[sfObject] && asyncAsset.remoteSpriteFrameCache[sfObject].isValid) {
@@ -191,6 +237,7 @@ export class EngineOverrider {
                                 spriteFrame["$_$__remoteURL__"] = sfObject;
                                 asyncAsset.remoteSpriteFrameCache[sfObject] = spriteFrame;
                             }
+
                             if (_this.isValid) _this.spriteFrame = spriteFrame;
                             delete _this._tempSpriteFrame;
                         }
@@ -916,13 +963,15 @@ export class EngineOverrider {
 
                 if (!sf["$_$__activeRef__"]) sf["$_$__activeRef__"] = 0;
                 if (!sf["$_$__activeDic__"]) sf["$_$__activeDic__"] = {};
-                if (this.node.active && !sf["$_$__activeDic__"][this.uuid]) {
-                    sf["$_$__activeRef__"]++;
-                    sf["$_$__activeDic__"][this.uuid] = 1;
-                }
-                else if (!this.node.active && sf["$_$__activeDic__"][this.uuid]) {
-                    sf["$_$__activeRef__"]--;
-                    delete sf["$_$__activeDic__"][this.uuid];
+                if (this.node) {
+                    if (this.node.active && !sf["$_$__activeDic__"][this.uuid]) {
+                        sf["$_$__activeRef__"]++;
+                        sf["$_$__activeDic__"][this.uuid] = 1;
+                    }
+                    else if (!this.node.active && sf["$_$__activeDic__"][this.uuid]) {
+                        sf["$_$__activeRef__"]--;
+                        delete sf["$_$__activeDic__"][this.uuid];
+                    }
                 }
             }
             ///=↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑新增↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
@@ -995,8 +1044,6 @@ export class EngineOverrider {
                         delete oldFrame["$_$__prefabDic__"][this["$_$__prefabSprite__"]];
                     }
                 }
-
-
             }
             if (spriteFrame) {
                 if (!spriteFrame["$_$__spriteRef__"]) spriteFrame["$_$__spriteRef__"] = 0;
@@ -1015,7 +1062,7 @@ export class EngineOverrider {
 
                 if (!spriteFrame["$_$__activeRef__"]) spriteFrame["$_$__activeRef__"] = 0;
                 if (!spriteFrame["$_$__activeDic__"]) spriteFrame["$_$__activeDic__"] = {};
-                if (this.node.active && !spriteFrame["$_$__activeDic__"][this.uuid]) {
+                if (this.node && this.node.active && !spriteFrame["$_$__activeDic__"][this.uuid]) {
                     spriteFrame["$_$__activeRef__"]++;
                     spriteFrame["$_$__activeDic__"][this.uuid] = 1;
                 }
