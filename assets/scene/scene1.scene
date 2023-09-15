@@ -2078,7 +2078,7 @@
       "__id__": 2
     },
     "_children": [],
-    "_active": true,
+    "_active": false,
     "_components": [
       {
         "__id__": 53
@@ -2087,8 +2087,8 @@
     "_prefab": null,
     "_lpos": {
       "__type__": "cc.Vec3",
-      "x": -349.528,
-      "y": -57.129,
+      "x": -383.353,
+      "y": 76.055,
       "z": 0
     },
     "_lrot": {
@@ -2277,11 +2277,11 @@
   },
   {
     "__type__": "AnimPartSetter",
-    "texturePrefix": "10",
-    "textureSuffix": ".png",
-    "startIndex": 173,
-    "endIndex": 250,
-    "digits": 3,
+    "texturePrefix": "",
+    "textureSuffix": "",
+    "startIndex": 10173,
+    "endIndex": 10250,
+    "digits": 5,
     "flag": "",
     "keyFrameEventList": {
       "__id__": 59
@@ -2290,16 +2290,17 @@
   {
     "__type__": "KeyFrameEvent",
     "dispatcher": null,
+    "frameIndex": 0,
     "eventType": "undefined",
     "data": "undefined"
   },
   {
     "__type__": "AnimPartSetter",
-    "texturePrefix": "10",
-    "textureSuffix": ".png",
-    "startIndex": 300,
-    "endIndex": 402,
-    "digits": 3,
+    "texturePrefix": "",
+    "textureSuffix": "",
+    "startIndex": 10300,
+    "endIndex": 10402,
+    "digits": 5,
     "flag": "",
     "keyFrameEventList": null
   },
@@ -2326,8 +2327,8 @@
     "_prefab": null,
     "_lpos": {
       "__type__": "cc.Vec3",
-      "x": -15.071,
-      "y": -257.751,
+      "x": 2.312,
+      "y": -236.453,
       "z": 0
     },
     "_lrot": {
@@ -2370,7 +2371,7 @@
     "_anchorPoint": {
       "__type__": "cc.Vec2",
       "x": 0.5,
-      "y": 0.5
+      "y": 0.15
     },
     "_id": "adnI66bDFI/4zVZppRIUyp"
   },
@@ -2432,7 +2433,7 @@
         "__id__": 67
       }
     ],
-    "fps": 60,
+    "fps": 30,
     "startPartIndexOrFlag": "0",
     "loopEnabled": true,
     "_id": "1bfp4354lAyJKGAFnzCv0E"
@@ -2441,29 +2442,32 @@
     "__type__": "AnimPartSetter",
     "texturePrefix": "http://172.16.70.32:5050/public/gif/role/role",
     "textureSuffix": ".png",
-    "startIndex": 1,
-    "endIndex": 18,
+    "startIndex": 5,
+    "endIndex": 32,
     "digits": 4,
     "flag": "",
-    "keyFrameEventList": {
-      "__id__": 66
-    }
+    "keyFrameEventList": [
+      {
+        "__id__": 66
+      }
+    ]
   },
   {
     "__type__": "KeyFrameEvent",
     "dispatcher": null,
-    "eventType": "undefined",
-    "data": "undefined"
+    "frameIndex": 0,
+    "eventType": "AAAA",
+    "data": "12345"
   },
   {
     "__type__": "AnimPartSetter",
     "texturePrefix": "http://172.16.70.32:5050/public/gif/role/role",
     "textureSuffix": ".png",
-    "startIndex": 19,
-    "endIndex": 26,
+    "startIndex": 101,
+    "endIndex": 200,
     "digits": 4,
     "flag": "",
-    "keyFrameEventList": null
+    "keyFrameEventList": []
   },
   {
     "__type__": "cc.Node",

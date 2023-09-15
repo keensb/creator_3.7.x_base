@@ -441,7 +441,7 @@ export class debugUtils { }
                 for (let key in highestParentNode) {//直接通过key获取
                     if (highestParentNode[key] == parentList[j]) {
                         isKey = true;
-                        pathTree = pathTree + "\x1b[33m['" + key + "']\x1b[0m";
+                        pathTree = pathTree + "\x1b[0m\x1b[33m['" + key + "']\x1b[0m\x1b[32m";
                         parentList = parentList.slice(j, parentList.length);
                         break recycling;
                     }
@@ -458,10 +458,10 @@ export class debugUtils { }
                                     let className = highestParentNode.components[i].constructor.name;
                                     //if (Laya.ClassUtils.getClass(className)) {
                                     if (className) {
-                                        pathTree += ".getComponent('" + className + "')\x1b[33m['" + key + "']\x1b[0m";
+                                        pathTree += ".getComponent('" + className + "')\x1b[0m\x1b[33m['" + key + "']\x1b[0m\x1b[32m";
                                     }
                                     else {
-                                        pathTree += ".components[" + i + "]" + "\x1b[33m['" + key + "']\x1b[0m";
+                                        pathTree += ".components[" + i + "]" + "\x1b[0m\x1b[33m['" + key + "']\x1b[0m\x1b[32m";
                                     }
                                     isContinue = true;
                                     break recycling;
@@ -518,7 +518,8 @@ export class debugUtils { }
             if (node == globalThis["debug_d"] || node == globalThis["debug_d2"] || node == globalThis["debug_block"]) return;
             //技巧1 (nameless)  意为'没有自定义name'的节点(这里自动使用实例的类名来代替), 你无法通过 parent.getChildByName 来获得对目标的引用 ※在IDE里添加的节点都有默认的name, 没有name(除非是你故意手动删除节点name xx.name="")的节点一般不存在于开发界面的场景或预制体里, 而是通过业务代码创建出来的※
             //技巧2 '节点对象["xxxx"]' 这种动态的引用路径的出现, 一般都是Scene2D或Prefab通过'UI运行时'绑定了子节点, 直接去查看'UI运行时'绑定的脚本就可以快速定位了
-            let nodeName = node.name ? node.name + "( cls = " + node.constructor.name + " )" : node["__proto__"].constructor.name + "( nameless,  cls = " + node.constructor.name + " )";
+            //let nodeName = node.name ? node.name + "( cls = " + node.constructor.name + " )" : node["__proto__"].constructor.name + "( nameless,  cls = " + node.constructor.name + " )";
+            let nodeName = node.name ? node.name : node["__proto__"].constructor.name + "( nameless )";
             let nodeIndex = node.parent ? node.parent.children.indexOf(node) : 0;
             if (node == currentScene) {
                 if (node.children && node.children.length) {
@@ -653,24 +654,26 @@ export class debugUtils { }
         findSubPath(currentScene)
 
         //cc.director.getScene().getChildByName('Canvas').children[8].getChildByName('Label')
-        let arr = pathTree.split(".");
-        arr.shift();
-        arr.shift();
-        arr.shift();//getChildByName('Canvas') , children[8], getChildByName('Label')
-        let _pathTree;
-        let findArr = [];
-        while (arr[0] && arr[0].indexOf("getChildByName('") >= 0) {
-            let str = arr.shift();
-            findArr.push(str.split("'")[1]);
-        }
-
-        if (findArr.length > 0) {
-            _pathTree = "cc.find('" + findArr.join("/") + "')";
-            if (arr.length) {
-                _pathTree = _pathTree + "." + arr.join(".")
+        if (pathTree.indexOf("cc.director.getScene().getChildByName") == 0) {
+            let arr = pathTree.split(".");
+            arr.shift();
+            arr.shift();
+            arr.shift();//getChildByName('Canvas') , children[8], getChildByName('Label')
+            let _pathTree;
+            let findArr = [];
+            while (arr[0] && arr[0].indexOf("getChildByName('") >= 0) {
+                let str = arr.shift();
+                findArr.push(str.split("'")[1]);
             }
-            pathTree = _pathTree;
-            //console.log("_pathTree =", _pathTree);
+
+            if (findArr.length > 0) {
+                _pathTree = "cc.find('" + findArr.join("/") + "')";
+                if (arr.length) {
+                    _pathTree = _pathTree + "." + arr.join(".")
+                }
+                pathTree = _pathTree;
+                //console.log("_pathTree =", _pathTree);
+            }
         }
 
         console.log("\n从\x1b[32mScene\x1b[0m到\x1b[32m目标对象\x1b[0m(已被保存为全局变量\x1b[32m$tt\x1b[0m)的最快捷引用路径:\n\x1b[32m" + pathTree + '\x1b[0m');//从stage到目标节点的获取方式, 优先使用getChildByName; 如果是nameless的节点则使用children[xx]
@@ -744,7 +747,7 @@ export class debugUtils { }
                 for (let key in highestParentNode) {//直接通过key获取
                     if (highestParentNode[key] == parentList[j]) {
                         isKey = true;
-                        pathTree = pathTree + "['" + key + "']";
+                        pathTree = pathTree + "\x1b[0m\x1b[33m['" + key + "']\x1b[0m\x1b[32m";
                         parentList = parentList.slice(j, parentList.length);
                         break recycling;
                     }
@@ -760,10 +763,10 @@ export class debugUtils { }
                                     parentList = parentList.slice(j, parentList.length);
                                     let className = highestParentNode.components[i].constructor.name;
                                     if (className) {
-                                        pathTree += ".getComponent('" + className + "')['" + key + "']";
+                                        pathTree += ".getComponent('" + className + "')\x1b[0m\x1b[33m['" + key + "']\x1b[0m\x1b[32m";
                                     }
                                     else {
-                                        pathTree += ".components[" + i + "]" + "['" + key + "']";
+                                        pathTree += ".components[" + i + "]" + "\x1b[0m\x1b[33m['" + key + "']\x1b[0m\x1b[32m";
                                     }
                                     isContinue = true;
                                     break recycling;
@@ -793,26 +796,28 @@ export class debugUtils { }
         }
 
          //cc.director.getScene().getChildByName('Canvas').children[8].getChildByName('Label')
-         let arr = pathTree.split(".");
-         arr.shift();
-         arr.shift();
-         arr.shift();//getChildByName('Canvas') , children[8], getChildByName('Label')
-         let _pathTree;
-         let findArr = [];
-         while (arr[0] && arr[0].indexOf("getChildByName('") >= 0) {
-             console.log("arr =", arr);
-             let str = arr.shift();
-             findArr.push(str.split("'")[1]);
-         }
+        if (pathTree.indexOf("cc.director.getScene().getChildByName") == 0) {
+            let arr = pathTree.split(".");
+            arr.shift();
+            arr.shift();
+            arr.shift();//getChildByName('Canvas') , children[8], getChildByName('Label')
+            let _pathTree;
+            let findArr = [];
+            while (arr[0] && arr[0].indexOf("getChildByName('") >= 0) {
+                console.log("arr =", arr);
+                let str = arr.shift();
+                findArr.push(str.split("'")[1]);
+            }
 
-         if (findArr.length > 0) {
-             _pathTree = "cc.find('" + findArr.join("/") + "')";
-             if (arr.length) {
-                 _pathTree = _pathTree + "." + arr.join(".")
-             }
-             pathTree = "%c" + _pathTree;
-             //console.log("_pathTree =", _pathTree);
-         }
+            if (findArr.length > 0) {
+                _pathTree = "cc.find('" + findArr.join("/") + "')";
+                if (arr.length) {
+                    _pathTree = _pathTree + "." + arr.join(".")
+                }
+                pathTree = "%c" + _pathTree;
+                //console.log("_pathTree =", _pathTree);
+            }
+        }
 
         console.log(pathTree, 'color: #00ff00;');
     }

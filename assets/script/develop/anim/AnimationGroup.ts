@@ -707,7 +707,8 @@ export class AnimationGroup extends AbstractAnimation implements IAnimation {
             this.setDriver(this.$driverType, this.playInterval * last_cs, this.$enforceStep);
         }
 
-        this.animBG.uiTransform.anchorPoint = new math.Vec2(-cp.x / this.animBG.nodeWidth, -cp.y / this.animBG.nodeHeight);
+        //this.animBG.uiTransform.anchorPoint = new math.Vec2(-cp.x / this.animBG.nodeWidth, -cp.y / this.animBG.nodeHeight);
+        this.animBG.uiTransform.anchorPoint = new math.Vec2(cp.x, cp.y);
 
         if (this.executeLoop && this.isPlaying && this.start == this.$loopStartFrame && this.start == this.$loopEndFrame) {
             //console.warn("提示: 循环点的起始帧号与结束帧号相同, 自动停止播放");
@@ -738,7 +739,8 @@ export class AnimationGroup extends AbstractAnimation implements IAnimation {
         let index = this.getPartIndexByFrame(this.currentFrame);
         let cp = this.correctedPointArray[index];
 
-        this.animBG.uiTransform.anchorPoint = new math.Vec2(-cp.x / this.animBG.nodeWidth, -cp.y / this.animBG.nodeHeight);
+        //this.animBG.uiTransform.anchorPoint = new math.Vec2(-cp.x / this.animBG.nodeWidth, -cp.y / this.animBG.nodeHeight);
+        this.animBG.uiTransform.anchorPoint = new math.Vec2(cp.x, cp.y);
 
         if (this.callBackFunctionCollection && this.executeFrameScript && this.callBackFunctionCollection[this.$currentFrame - 1]) {
             this.callBackFunctionCollection[this.$currentFrame - 1].call(null);

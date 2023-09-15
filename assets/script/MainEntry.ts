@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, assetManager, Sprite, Button, NodeEventType, Texture2D, AudioClip, AudioSource, Asset, SpriteAtlas, find, SpriteFrame, ImageAsset, CCString, CCInteger, TweenAction, Tween, tween, director, EventTouch, Graphics, Color, BlockInputEvents, UITransform } from 'cc';
+import { _decorator, Component, Node, assetManager, Sprite, Button, NodeEventType, Texture2D, AudioClip, AudioSource, Asset, SpriteAtlas, find, SpriteFrame, ImageAsset, CCString, CCInteger, TweenAction, Tween, tween, director, EventTouch, Graphics, Color, BlockInputEvents, UITransform, debug } from 'cc';
 import { DEBUG } from 'cc/env';
 import { ClassDictionary } from './ClassDictionary';
 import { usingAssets } from './config/usingAssets';
@@ -8,7 +8,7 @@ import { asyncAsset } from './develop/mgr/asyncAsset';
 import { AnimationGroup, TextureInfoMaker, getSpriteWithAnimationGroup } from './develop/anim/AnimationGroup';
 import { EngineOverrider } from './develop/overwrite/EngineOverrider';
 import { alignMgr } from './develop/ccutils/alignMgr';
-
+ 
 const { ccclass, property } = _decorator;
 
 @ccclass('MainEntryObject')
@@ -49,7 +49,7 @@ export class MainEntry extends Component {
             console.log(evt);
             console.log("xx", alignMgr.getGlobalLeft(this.btn1.node), alignMgr.getGlobalBottom(this.btn1.node));
         }, this) */
-
+       
         this.btn1.node.on(NodeEventType.TOUCH_END, this.loadingAsset, this);
         this.btn2.node.on(NodeEventType.TOUCH_END, this.unUseAsset, this);
         this.btn3.node.on(NodeEventType.TOUCH_END, this.useAsset, this);
@@ -145,8 +145,6 @@ export class MainEntry extends Component {
         })
 
         
-
-
         let count2 = 0;
         for (let i = 1; i <= 74; i++) {
             //http://172.16.70.32:5050/public/gif/role/role0001.png
@@ -205,15 +203,9 @@ export class MainEntry extends Component {
         let roleArr = new Array(456);
         let count = 0;
         for (let i = 1; i <= roleArr.length; i++) {
-            let n;
-            if (i < 10) {
-                n = "000" + i;
-            }
-            else if (i < 100) {
-                n = "00" + i;
-            }
-            else if (i < 1000) {
-                n = "0" + i;
+            let n = i.toString();;
+            while (n.length < 4) {
+                n = 0 + n;
             }
 
             asyncAsset.loadOneRemote(`http://172.16.70.32:5050/public/gif/role/role${n}.png`).then((res: ImageAsset) => {
@@ -233,6 +225,8 @@ export class MainEntry extends Component {
                 }
             });
         }
+
+        
     }
 
     private isLoading: boolean = false;
