@@ -1,7 +1,16 @@
+import { AbstractAnimation } from "./../script/develop/anim/AbstractAnimation";
+import { AnimPartSetter } from "./../script/develop/anim/AnimPartSetter";
+import { AnimationGroup, TextureInfoMaker } from "./../script/develop/anim/AnimationGroup";
+import { AnimationGroupComponent } from "./../script/develop/component/AnimationGroupComponent";
+import { AnimationLite } from "./../script/develop/customNode/AnimationLite";
+import { EngineOverrider } from "./../script/develop/overwrite/EngineOverrider";
+import { GameEvent } from "./../script/develop/types/GameEvent";
+import { KeyFrameEvent } from "./../script/develop/anim/KeyFrameEvent";
 import { MainEntry } from "./../script/MainEntry";
 import { Scene2 } from "./../script/Scene2";
-import { alignMgr } from "./develop/ccutils/alignMgr";
-
+import { alignMgr } from "./../script/develop/ccutils/alignMgr";
+import { debugUtils } from "./../script/develop/ccutils/debugUtils";
+import { disTypes } from "./../script/develop/types/disType";
 
 
 export class ClassDictionary {
@@ -43,7 +52,7 @@ export class ClassDictionary {
 	 * var a:Sprite = new Sprite();
 	 * var b:Button = new Button();
 	 * if(ClassDictionary.getClassByTarget(a) == ClassDictionary.getClassByTarget(b)){
-	 * 		......
+	 * 	......
 	 * }
 	 * 
 	 */
@@ -58,6 +67,16 @@ export class ClassDictionary {
 	}
 }
 
+ClassDictionary.classDic["AbstractAnimation"] = AbstractAnimation;
+ClassDictionary.classDic["AnimPartSetter"] = AnimPartSetter;
+ClassDictionary.classDic["AnimationGroup"] = AnimationGroup;
+ClassDictionary.classDic["AnimationGroupComponent"] = AnimationGroupComponent;
+ClassDictionary.classDic["AnimationLite"] = AnimationLite;
+ClassDictionary.classDic["EngineOverrider"] = EngineOverrider;
+ClassDictionary.classDic["GameEvent"] = GameEvent;
+ClassDictionary.classDic["KeyFrameEvent"] = KeyFrameEvent;
 ClassDictionary.classDic["MainEntry"] = MainEntry;
 ClassDictionary.classDic["Scene2"] = Scene2;
 ClassDictionary.classDic["alignMgr"] = alignMgr;
+ClassDictionary.classDic["debugUtils"] = debugUtils;
+ClassDictionary.classDic["disTypes.DriverType"] = disTypes.DriverType;
